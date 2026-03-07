@@ -1,0 +1,15 @@
+
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+
+#application configurations
+*.properties
+*.yml
+*.yaml
+
+
