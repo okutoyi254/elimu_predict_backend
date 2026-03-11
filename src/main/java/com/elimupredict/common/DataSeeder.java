@@ -1,4 +1,4 @@
-package com.elimupredict.auth.common;
+package com.elimupredict.common;
 
 import com.elimupredict.auth.enums.Role;
 import com.elimupredict.auth.user.UserRepository;
