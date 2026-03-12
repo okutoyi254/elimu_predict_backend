@@ -1,6 +1,5 @@
-package com.elimupredict.auth.common;
+package com.elimupredict.common;
 
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;

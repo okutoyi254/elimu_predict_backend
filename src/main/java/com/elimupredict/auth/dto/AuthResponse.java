@@ -1,6 +1,6 @@
 package com.elimupredict.auth.dto;
 
-import com.elimupredict.auth.enums.Role;
+import com.elimupredict.common.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

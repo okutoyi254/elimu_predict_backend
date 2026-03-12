@@ -65,8 +65,8 @@ src/main/java/com/elimupredict/
 
 ## Modules & Progress
 - [x] Sprint 1 — Project setup & configuration
-- [ ] Sprint 2 — Auth & Security (JWT + Roles)
-- [ ] Sprint 3 — Core APIs (Students, Subjects, Marks)
+- [x] Sprint 2 — Auth & Security (JWT + Roles)
+- [x] Sprint 3 — Core APIs (Students, Subjects, Marks)
 - [ ] Sprint 4 — AI Integration (ML + Gemini)
 - [ ] Sprint 5 — Reports, Dashboards & Testing
 
