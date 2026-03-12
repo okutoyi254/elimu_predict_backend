@@ -36,6 +36,13 @@ public class DataSeeder implements CommandLineRunner {
        seedUser("ADMIN001","System Admin","admin@123", Role.ADMIN);
        seedUser("ITH001","IT Handler","ithandler@123", Role.IT_HANDLER);
 
+        seedUser("TCH001", "John Lagat", "teacher123", Role.TEACHER);
+        seedUser("TCH002", "Jane Nekesa", "teacher123", Role.TEACHER);
+        seedUser("SNR001", "James Okutoyi", "senior123", Role.SENIOR_TEACHER);
+        seedUser("DEP001", "Aaron Mutua", "deputy123", Role.DEPUTY_PRINCIPAL);
+        seedUser("PRI001", "Lovingstone Ochieng'", "principal123", Role.PRINCIPAL);
+        seedUser("PAR001", "Herine Adhiambo", "parent123", Role.PARENT);
+
        seedCsvData();
     }
     private  void seedUser(String username, String fullName, String password, Role role) {

@@ -67,7 +67,7 @@ public class MarksService {
 
         StudentRecord record = recordRepository.findById(recordId).orElseThrow(()->new RuntimeException("Record not found: "+recordId));
 
-        if(!record.uploadedBy.equals(requestedBy)){
+        if(!record.getUploadedBy().equals(requestedBy)){
             throw new RuntimeException("You are not authorized to edit the marks");
         }
 

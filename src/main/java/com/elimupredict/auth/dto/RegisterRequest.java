@@ -1,6 +1,6 @@
 package com.elimupredict.auth.dto;
 
-import com.elimupredict.auth.enums.Role;
+import com.elimupredict.common.enums.Role;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
