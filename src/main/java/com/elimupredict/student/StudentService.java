@@ -59,7 +59,7 @@ public class StudentService {
                 .map(this::toReponse)
                 .toList();
     }
-    private Student findOrThrow(String admissionNumber) {
+    public Student findOrThrow(String admissionNumber) {
         return studentRepository.findByAdmissionNumber(admissionNumber)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
     }

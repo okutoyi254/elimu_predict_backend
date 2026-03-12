@@ -1,6 +1,6 @@
 package com.elimupredict.auth.user;
 
-import com.elimupredict.auth.enums.Role;
+import com.elimupredict.common.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
