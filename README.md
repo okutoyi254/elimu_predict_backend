@@ -71,15 +71,15 @@ src/main/java/com/elimupredict/
 - [ ] Sprint 5 — Reports, Dashboards & Testing
 
 ## Team
-| Name | Role |
-|---|---|
-| Lovingstone Ochieng | Backend & AI Integration |
-| James Okutoyi | AI Model Training |
-| Herine Adhiambo | Frontend |
-| Stanley Makhanu | Frontend |
-| Aaron Mutua | Backend Support |
-| Nick Naftali | Testing & Documentation |
-| Dennis Kipleting | Frontend |
+| Name | Role                                    |
+|---|-----------------------------------------|
+| Lovingstone Ochieng | Group Leader & Dev Supervision          |
+| James Okutoyi | Backend and AI Integration              |
+| Herine Adhiambo | Frontend                                |
+| Stanley Makhanu | Frontend                                |
+| Aaron Mutua | AI model training  & Dashboard Creation |
+| Nick Naftali | Testing & Documentation                 |
+| Dennis Kipleting | Frontend                                |
 
 ## License
 MIT License — Masinde Muliro University of Science and Technology
