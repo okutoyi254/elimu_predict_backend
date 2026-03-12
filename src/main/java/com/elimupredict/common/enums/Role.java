@@ -1,4 +1,4 @@
-package com.elimupredict.auth.enums;
+package com.elimupredict.common.enums;
 
 public enum Role {
 
