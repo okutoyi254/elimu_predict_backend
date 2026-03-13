@@ -12,7 +12,7 @@ public interface AIAnalysisRepository extends JpaRepository<AiAnalysis,Long> {
     List<AiAnalysis> findByAdmissionNumber(String admissionNumber);
     List<AiAnalysis> findByAdmissionNumberAndTerm(String admissionNumber, Term term);
 
-    Optional<AiAnalysis> findByAdmissionNumberAndSubjectAndTermAndAcademicYear(
+    Optional<AiAnalysis> findByAdmissionNumberAndSubjectIdAndTermAndAcademicYear(
             String admissionNumber, Long subjectId,Term term, Integer academicYear
     );
 

@@ -59,13 +59,13 @@ public class GeminiService {
     private String buildPrompt(String subjectName,
                                double riskPercentage,
                                List<Double> marks){
-        return  String.format(
+        return String.format(
                 "A secondary school student has a %.1f%% risk of failing %s. " +
-                        "Their recent assessment scores are: %s. " +
-                        "Provide exactly 3 specific, practical study interventions " +
-                        "suitable for a secondary school student. " +
-                        "Be concise and use simple language. " +
-                        "Format as a numbered list.",
+                "Their recent assessment scores are: %s. " +
+                "Provide exactly 3 specific, practical study interventions " +
+                "suitable for a secondary school student. " +
+                "Be concise and use simple language. " +
+                "Format as a numbered list.",
                 riskPercentage, subjectName, marks.toString()
 
         );
