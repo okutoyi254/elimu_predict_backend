@@ -1,5 +1,7 @@
 package com.elimupredict.auth.security;
 
+import com.elimupredict.audit_logs.AuditLog;
+import com.elimupredict.audit_logs.AuditLogRepository;
 import com.elimupredict.auth.dto.AuthResponse;
 import com.elimupredict.auth.dto.LoginRequest;
 import com.elimupredict.auth.dto.RegisterRequest;
@@ -11,6 +13,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -19,6 +23,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+    private final AuditLogRepository auditLogRepository;
+
 
     public AuthResponse login(LoginRequest request){
         authenticationManager.authenticate(
@@ -32,6 +38,14 @@ public class AuthService {
                 .orElseThrow(()->new RuntimeException("User not found"));
 
         String token =jwtUtil.generateToken(user.getUsername(), user.getRole().name());
+
+        auditLogRepository.save(AuditLog.builder()
+                .userId(user.getId())
+                .userRole(user.getRole().name())
+                .action("LOGIN")
+                .description(user.getUsername() + " logged in")
+                .timestamp(LocalDateTime.now())
+                .build());
 
         return AuthResponse.builder()
                 .token(token)
@@ -64,4 +78,8 @@ public class AuthService {
                 .userName(user.getUsername())
                 .build();
     }
+
+
+
+
 }

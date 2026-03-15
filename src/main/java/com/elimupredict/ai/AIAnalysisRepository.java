@@ -16,6 +16,8 @@ public interface AIAnalysisRepository extends JpaRepository<AiAnalysis,Long> {
             String admissionNumber, Long subjectId,Term term, Integer academicYear
     );
 
+    List<AiAnalysis> findByAdmissionNumberAndTermAndAcademicYear(String admissionNumber, Term term, Integer academicYear);
+
     @Query("SELECT a FROM AiAnalysis a WHERE  a.subjectId = :subjectId " +
             "AND a.term = :term AND a.academicYear = :year " +
             "AND a.riskLevel = 'HIGH'")

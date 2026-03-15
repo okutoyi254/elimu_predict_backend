@@ -39,5 +39,7 @@ public class SubjectService {
         return subjectRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Subject not found: " + id));
     }
-
+    public List<Subject> getByTeacher(Long teacherId) {
+        return subjectRepository.findByTeacherId(teacherId);
+    }
 }
