@@ -16,8 +16,9 @@ public class TeacherDashboardDTO {
     private Long highRiskCount;
     private Long mediumRiskCount;
 
-//    Class weakness overview
-    private List<ClassReportDTO.SubjectWeaknessDTO> classWeakness;
+
+    //    Class weakness overview
+    private List<ClassReportDTO.SubjectWeaknessDTO> classWeaknesses;
 
     @Data
     @Builder
@@ -27,7 +28,7 @@ public class TeacherDashboardDTO {
         private String fullName;
         private String riskLevel;
         private Double riskPercentage;
-        private String weaknessSubject;
+        private String weakestSubject;
         private String suggestion;
     }
 }

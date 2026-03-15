@@ -13,13 +13,13 @@ public class SeniorDashboardDTO {
 
     private List<ResourceAllocationDTO> resourceRecommendations;
 
-    private List<ClassReportDTO.SubjectWeaknessDTO> overallWeakness;
+    private List<ClassReportDTO.SubjectWeaknessDTO> overallWeaknesses;
 
-    private Long totalRiskStudents;
+    private Long totalAtRiskStudents;
 
     @Data
     @Builder
-    private static class ResourceAllocationDTO{
+    public static class ResourceAllocationDTO{
         private String subjectName;
         private Integer affectedStudents;
         private String recommendation;
