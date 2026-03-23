@@ -7,6 +7,7 @@ import com.elimupredict.common.enums.Term;
 import com.elimupredict.marks.StudentRecord;
 import com.elimupredict.marks.StudentRecordRepository;
 import com.elimupredict.student.StudentService;
+import com.elimupredict.student.dto.StudentResponse;
 import com.elimupredict.subject.Subject;
 import com.elimupredict.subject.SubjectService;
 import lombok.RequiredArgsConstructor;
@@ -75,27 +76,29 @@ public class AiAnalysisService {
         List<String> admissionNumbers = studentService
                 .getStudentsByClassName(className)
                 .stream()
-                .map(s -> s.getAdmissionNumber())
+                .map(StudentResponse::getAdmissionNumber)
                 .toList();
 
         if (admissionNumbers.isEmpty()) {
             throw new RuntimeException("No students found in class: " + className);
         }
 
-        Map<String, List<AnalysisResponse>> classResults = new LinkedHashMap<>();
+        Map<String, List<AnalysisResponse>> classResults =
+                new java.util.concurrent.ConcurrentHashMap<>();
 
-        for (String admNo : admissionNumbers) {
+        // Simple loop — virtual threads handle concurrency automatically
+        admissionNumbers.forEach(admNo -> {
             try {
-                List<AnalysisResponse> studentResults =
+                List<AnalysisResponse> results =
                         analyzeStudent(admNo, term, academicYear);
-                classResults.put(admNo, studentResults);
+                classResults.put(admNo, results);
             } catch (Exception e) {
                 log.warn("Skipping student {} — {}", admNo, e.getMessage());
             }
-        }
+        });
 
-        log.info("Class analysis complete for {} — {} students analyzed",
-                className, classResults.size());
+        log.info("Class analysis complete — {}/{} students analyzed",
+                classResults.size(), admissionNumbers.size());
 
         return classResults;
     }
