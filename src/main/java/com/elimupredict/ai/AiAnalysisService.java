@@ -86,22 +86,9 @@ public class AiAnalysisService {
             throw new RuntimeException("No students found in class: " + className);
         }
 
-        Map<String, List<AnalysisResponse>> classResults =
-<<<<<<< HEAD
-                new java.util.concurrent.ConcurrentHashMap<>();
+        Map<String, List<AnalysisResponse>> classResults = new ConcurrentHashMap<>();
 
-        // Simple loop — virtual threads handle concurrency automatically
-        admissionNumbers.forEach(admNo -> {
-            try {
-                List<AnalysisResponse> results =
-                        analyzeStudent(admNo, term, academicYear);
-                classResults.put(admNo, results);
-            } catch (Exception e) {
-                log.warn("Skipping student {} — {}", admNo, e.getMessage());
-=======
-                new ConcurrentHashMap<>();
-
-        // Create a virtual thread per student — all run simultaneously
+        // ✅ BEST version → Virtual threads (clean + scalable)
         try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 
             List<? extends Future<?>> futures = admissionNumbers.stream()
@@ -111,34 +98,26 @@ public class AiAnalysisService {
                                     analyzeStudent(admNo, term, academicYear);
                             classResults.put(admNo, results);
                         } catch (Exception e) {
-                            log.warn("Skipping student {} — {}",
-                                    admNo, e.getMessage());
+                            log.warn("Skipping student {} — {}", admNo, e.getMessage());
                         }
                     }))
                     .toList();
 
-            // Wait for ALL students to complete
+            // Wait for all tasks
             for (Future<?> future : futures) {
                 try {
                     future.get();
                 } catch (Exception e) {
                     log.warn("A student analysis task failed — {}", e.getMessage());
                 }
->>>>>>> main
             }
-        });
+        }
 
-<<<<<<< HEAD
-        log.info("Class analysis complete — {}/{} students analyzed",
-                classResults.size(), admissionNumbers.size());
-=======
         log.info("Class analysis complete for {} — {}/{} students analyzed",
                 className, classResults.size(), admissionNumbers.size());
->>>>>>> main
 
         return classResults;
     }
-
     // ── Core pipeline for one student + one subject ──
     private AnalysisResponse runAnalysis(
             String admissionNumber, Long subjectId, String subjectName,
