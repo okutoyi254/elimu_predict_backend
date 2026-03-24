@@ -7,6 +7,7 @@ import com.elimupredict.common.enums.Term;
 import com.elimupredict.marks.StudentRecord;
 import com.elimupredict.marks.StudentRecordRepository;
 import com.elimupredict.student.StudentService;
+import com.elimupredict.student.dto.StudentResponse;
 import com.elimupredict.subject.Subject;
 import com.elimupredict.subject.SubjectService;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 @Service
@@ -75,27 +79,44 @@ public class AiAnalysisService {
         List<String> admissionNumbers = studentService
                 .getStudentsByClassName(className)
                 .stream()
-                .map(s -> s.getAdmissionNumber())
+                .map(StudentResponse::getAdmissionNumber)
                 .toList();
 
         if (admissionNumbers.isEmpty()) {
             throw new RuntimeException("No students found in class: " + className);
         }
 
-        Map<String, List<AnalysisResponse>> classResults = new LinkedHashMap<>();
+        Map<String, List<AnalysisResponse>> classResults =
+                new ConcurrentHashMap<>();
 
-        for (String admNo : admissionNumbers) {
-            try {
-                List<AnalysisResponse> studentResults =
-                        analyzeStudent(admNo, term, academicYear);
-                classResults.put(admNo, studentResults);
-            } catch (Exception e) {
-                log.warn("Skipping student {} — {}", admNo, e.getMessage());
+        // Create a virtual thread per student — all run simultaneously
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+
+            List<? extends Future<?>> futures = admissionNumbers.stream()
+                    .map(admNo -> executor.submit(() -> {
+                        try {
+                            List<AnalysisResponse> results =
+                                    analyzeStudent(admNo, term, academicYear);
+                            classResults.put(admNo, results);
+                        } catch (Exception e) {
+                            log.warn("Skipping student {} — {}",
+                                    admNo, e.getMessage());
+                        }
+                    }))
+                    .toList();
+
+            // Wait for ALL students to complete
+            for (Future<?> future : futures) {
+                try {
+                    future.get();
+                } catch (Exception e) {
+                    log.warn("A student analysis task failed — {}", e.getMessage());
+                }
             }
         }
 
-        log.info("Class analysis complete for {} — {} students analyzed",
-                className, classResults.size());
+        log.info("Class analysis complete for {} — {}/{} students analyzed",
+                className, classResults.size(), admissionNumbers.size());
 
         return classResults;
     }
@@ -139,15 +160,23 @@ public class AiAnalysisService {
         }
 
         // ── Step 2: Call Gemini only if risk >= 40% ──
+// ── Step 2: Call Gemini only if risk >= 40% AND no suggestion yet ──
+        AiAnalysis analysis = new AiAnalysis();
         String suggestion = null;
-        if (mlResponse != null && mlResponse.getRiskPercentage() != null
-                && mlResponse.getRiskPercentage() >= 40.0) {
+
+        if (mlResponse != null
+                && mlResponse.getRiskPercentage() != null
+                && mlResponse.getRiskPercentage() >= 40.0
+                && (analysis.getSuggestion() == null
+                || analysis.getSuggestion().isEmpty())) {  // ← don't regenerate
             suggestion = geminiService.generateSuggestion(
                     subjectName, mlResponse.getRiskPercentage(), marks);
+        } else if (analysis.getSuggestion() != null) {
+            suggestion = analysis.getSuggestion();  // reuse existing
         }
 
         // ── Step 3: Save or update analysis record ──
-        AiAnalysis analysis = analysisRepository
+        analysis = analysisRepository
                 .findByAdmissionNumberAndSubjectIdAndTermAndAcademicYear(
                         admissionNumber, subjectId, term, academicYear)
                 .orElse(AiAnalysis.builder()

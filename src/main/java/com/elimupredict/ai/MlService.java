@@ -19,7 +19,7 @@ public class MlService {
     @Value("${ml.service.url}")
     private String mlServiceUrl;
 
-    private static final boolean USE_REAL_ML_SERVICE = false;
+    private static final boolean USE_REAL_ML_SERVICE = true;
 
     private final RestTemplate restTemplate;
 
@@ -82,6 +82,8 @@ public class MlService {
 //FlaskApi call request
     private MlResponse callRealMlService(MlRequest request){
 
+        log.info("[ML SERVICE] Calling Flask for student {}",
+                request.getAdmissionNumber());
         try{
             String url = mlServiceUrl+"/predict";
             return  restTemplate.postForObject(url,request, MlResponse.class);
