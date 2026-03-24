@@ -10,4 +10,5 @@ public class MlResponse {
     private Double riskPercentage;
     private String riskLevel;
     private Integer weaknessGroup;
+    private Double confidence;
 }

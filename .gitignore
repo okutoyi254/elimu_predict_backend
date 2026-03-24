@@ -12,4 +12,6 @@
 *.yml
 *.yaml
 
+target/
+*.class
 

@@ -87,6 +87,18 @@ public class AiAnalysisService {
         }
 
         Map<String, List<AnalysisResponse>> classResults =
+<<<<<<< HEAD
+                new java.util.concurrent.ConcurrentHashMap<>();
+
+        // Simple loop — virtual threads handle concurrency automatically
+        admissionNumbers.forEach(admNo -> {
+            try {
+                List<AnalysisResponse> results =
+                        analyzeStudent(admNo, term, academicYear);
+                classResults.put(admNo, results);
+            } catch (Exception e) {
+                log.warn("Skipping student {} — {}", admNo, e.getMessage());
+=======
                 new ConcurrentHashMap<>();
 
         // Create a virtual thread per student — all run simultaneously
@@ -112,11 +124,17 @@ public class AiAnalysisService {
                 } catch (Exception e) {
                     log.warn("A student analysis task failed — {}", e.getMessage());
                 }
+>>>>>>> main
             }
-        }
+        });
 
+<<<<<<< HEAD
+        log.info("Class analysis complete — {}/{} students analyzed",
+                classResults.size(), admissionNumbers.size());
+=======
         log.info("Class analysis complete for {} — {}/{} students analyzed",
                 className, classResults.size(), admissionNumbers.size());
+>>>>>>> main
 
         return classResults;
     }
