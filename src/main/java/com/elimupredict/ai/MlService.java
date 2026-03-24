@@ -1,5 +1,6 @@
 package com.elimupredict.ai;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +20,7 @@ public class MlService {
     @Value("${ml.service.url}")
     private String mlServiceUrl;
 
-    private static final boolean USE_REAL_ML_SERVICE = false;
+    private static final boolean USE_REAL_ML_SERVICE = true;
 
     private final RestTemplate restTemplate;
 
@@ -82,6 +83,8 @@ public class MlService {
 //FlaskApi call request
     private MlResponse callRealMlService(MlRequest request){
 
+        log.info("[ML SERVICE] Calling Flask for student {}",
+                request.getAdmissionNumber());
         try{
             String url = mlServiceUrl+"/predict";
             return  restTemplate.postForObject(url,request, MlResponse.class);
@@ -90,5 +93,18 @@ public class MlService {
             log.error("ML service unavailable: {}, Falling back to stub.",ex.getMessage());
             return calculateStubRisk(request);
         }
+    }
+
+@jakarta.annotation.PostConstruct
+    public void wakeUpFlask() {
+        Thread.ofVirtual().start(() -> {
+            try {
+                log.info("[ML SERVICE] Waking up Flask on Render...");
+                restTemplate.getForObject(mlServiceUrl + "/", String.class);
+                log.info("[ML SERVICE] Flask is awake");
+            } catch (Exception e) {
+                log.warn("[ML SERVICE] Flask wake-up ping failed — {}", e.getMessage());
+            }
+        });
     }
 }
