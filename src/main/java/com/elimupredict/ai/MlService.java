@@ -1,5 +1,6 @@
 package com.elimupredict.ai;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -92,5 +93,18 @@ public class MlService {
             log.error("ML service unavailable: {}, Falling back to stub.",ex.getMessage());
             return calculateStubRisk(request);
         }
+    }
+
+@jakarta.annotation.PostConstruct
+    public void wakeUpFlask() {
+        Thread.ofVirtual().start(() -> {
+            try {
+                log.info("[ML SERVICE] Waking up Flask on Render...");
+                restTemplate.getForObject(mlServiceUrl + "/", String.class);
+                log.info("[ML SERVICE] Flask is awake");
+            } catch (Exception e) {
+                log.warn("[ML SERVICE] Flask wake-up ping failed — {}", e.getMessage());
+            }
+        });
     }
 }
