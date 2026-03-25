@@ -14,7 +14,8 @@ public class AnalysisResponse {
     private String suggestion;
     private  String analysisStatus;
     private String term;
-    private Integer academicYear;
+    private Integer academicYear= 2026;
+    private Integer trend;
 
 
 }

@@ -4,13 +4,21 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.elimupredict.ai.dto.MlRequest;
 import com.elimupredict.ai.dto.MlResponse;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -87,10 +95,54 @@ public class MlService {
                 request.getAdmissionNumber());
         try{
             String url = mlServiceUrl+"/predict";
-            return  restTemplate.postForObject(url,request, MlResponse.class);
+
+            Map<String,Object> payLoad = Map.of(
+                    "register", request.getAdmissionNumber(),
+                    "subject", request.getSubjectId()
+            );
+
+            HttpHeaders headers= new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String,Object>>entity= new HttpEntity<>(payLoad,headers);
+
+            log.info("[ML-SERVICE] Calling Flask for student {}",
+                    request.getAdmissionNumber());
+
+            ResponseEntity<MlResponse> response= restTemplate
+                    .postForEntity(url,entity, MlResponse.class);
+
+            MlResponse mlResponse= response.getBody();
+
+            if(mlResponse == null || mlResponse.getRiskPercentage() ==null){
+                log.warn("[ML SERVICE] Invalid response - falling back to stub");
+                return calculateStubRisk(request);
+
+            }
+
+            mlResponse.applyTrend();
+
+            mlResponse.setAdmissionNumber(request.getAdmissionNumber());
+            mlResponse.setSubjectId(request.getSubjectId());
+            log.info("[ML SERVICE] Student: {} | Risk: {}% | Level: {} | Trend: {}",
+                    request.getAdmissionNumber(),
+                    mlResponse.getRiskPercentage(),
+                    mlResponse.getRiskLevel(),
+                    mlResponse.getTrend());
+
+            return mlResponse;
         }
-        catch(Exception ex){
-            log.error("ML service unavailable: {}, Falling back to stub.",ex.getMessage());
+        catch(ResourceAccessException ex){
+            log.error("ML service unreachable: {}, Falling back to stub.",ex.getMessage());
+            return calculateStubRisk(request);
+        }
+        catch(HttpServerErrorException ex){
+            log.error("ML SERVICE 500 for student {} -{}, Stub fallback.",
+                    request.getAdmissionNumber(),ex.getResponseBodyAsString());
+            return calculateStubRisk(request);
+        }
+        catch (Exception ex){
+            log.error("[ML SERVICE] Unexpected error for student {} — {}. Stub fallback.",
+                    request.getAdmissionNumber(), ex.getMessage());
             return calculateStubRisk(request);
         }
     }
