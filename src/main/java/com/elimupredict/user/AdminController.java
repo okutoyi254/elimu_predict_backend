@@ -2,6 +2,7 @@ package com.elimupredict.user;
 
 import com.elimupredict.audit_logs.AuditLog;
 import com.elimupredict.audit_logs.AuditLogRepository;
+import com.elimupredict.common.ApiVersion;
 import com.elimupredict.common.enums.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping(ApiVersion.V1+"/admin")
 @RequiredArgsConstructor
 public class AdminController {
 

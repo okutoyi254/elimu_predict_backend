@@ -30,7 +30,7 @@ public class DashboardService {
     public TeacherDashboardDTO getTeacherDashboard(
             String teacherId, Term term, Integer academicYear) {
 
-        User teacher = userRepository.findByUserName(teacherId)
+        User teacher = userRepository.findByUsername(teacherId)
                 .orElseThrow(() -> new RuntimeException(
                         "Teacher not found: " + teacherId));
 

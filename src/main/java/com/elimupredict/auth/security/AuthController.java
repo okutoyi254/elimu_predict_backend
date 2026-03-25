@@ -3,6 +3,7 @@ package com.elimupredict.auth.security;
 import com.elimupredict.auth.dto.AuthResponse;
 import com.elimupredict.auth.dto.LoginRequest;
 import com.elimupredict.auth.dto.RegisterRequest;
+import com.elimupredict.common.ApiVersion;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -10,7 +11,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping(ApiVersion.V1+"/auth")
 @RequiredArgsConstructor
 public class AuthController {
 

@@ -1,5 +1,6 @@
 package com.elimupredict.user;
 
+import com.elimupredict.common.ApiVersion;
 import com.elimupredict.common.enums.Role;
 import com.elimupredict.user.dto.RegisterRequest;
 import com.elimupredict.user.dto.UserResponse;
@@ -14,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping(ApiVersion.V1+"/users")
 @RequiredArgsConstructor
 public class UserController {
 

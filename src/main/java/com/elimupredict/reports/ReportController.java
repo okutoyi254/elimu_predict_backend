@@ -1,5 +1,6 @@
 package com.elimupredict.reports;
 
+import com.elimupredict.common.ApiVersion;
 import com.elimupredict.common.enums.Term;
 import com.elimupredict.reports.dto.*;
 import com.elimupredict.student.StudentService;
@@ -12,7 +13,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping(ApiVersion.V1)
 @RequiredArgsConstructor
 public class ReportController {
 
@@ -30,7 +31,7 @@ public class ReportController {
             @RequestParam Term term,
             @RequestParam Integer academicYear) {
 
-        User parent = userRepository.findByUserName(userId)
+        User parent = userRepository.findByUsername(userId)
                 .orElseThrow(() -> new RuntimeException(
                         "Parent not found: " + userId));
 
@@ -113,7 +114,7 @@ public class ReportController {
             @RequestParam Term term,
             @RequestParam Integer academicYear) {
 
-        User parent = userRepository.findByUserName(userId)
+        User parent = userRepository.findByUsername(userId)
                 .orElseThrow(() -> new RuntimeException(
                         "Parent not found: " + userId));
 

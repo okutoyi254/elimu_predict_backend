@@ -1,5 +1,6 @@
 package com.elimupredict.subject;
 
+import com.elimupredict.common.ApiVersion;
 import com.elimupredict.subject.dto.SubjectRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +11,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RequestMapping("/api/subjects")
+@RestController
+@RequestMapping(ApiVersion.V1+"/subjects")
 @RequiredArgsConstructor
 public class SubjectController {
 
