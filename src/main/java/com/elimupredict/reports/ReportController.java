@@ -2,6 +2,9 @@ package com.elimupredict.reports;
 
 import com.elimupredict.common.enums.Term;
 import com.elimupredict.reports.dto.*;
+import com.elimupredict.student.StudentService;
+import com.elimupredict.user.User;
+import com.elimupredict.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,16 +18,37 @@ public class ReportController {
 
     private final ReportService reportService;
     private final DashboardService dashboardService;
+    private final UserRepository userRepository;
+    private final StudentService studentService;
 
     // ── Student report ──
-    @GetMapping("/reports/student/{admissionNumber}")
-    @PreAuthorize("hasAnyRole('TEACHER','SENIOR_TEACHER','PRINCIPAL','ADMIN')")
-    public ResponseEntity<StudentReportDTO> getStudentReport(
+    @GetMapping("/dashboard/parent/child/{admissionNumber}")
+    @PreAuthorize("hasRole('PARENT')")
+    public ResponseEntity<StudentReportDTO> getChildReport(
+            @AuthenticationPrincipal String userId,   // from JWT — not URL
             @PathVariable String admissionNumber,
             @RequestParam Term term,
             @RequestParam Integer academicYear) {
+
+        User parent = userRepository.findByUserName(userId)
+                .orElseThrow(() -> new RuntimeException(
+                        "Parent not found: " + userId));
+
+        // Verify this child actually belongs to this parent
+        boolean isParentsChild = studentService
+                .getByParentId(parent.getId())
+                .stream()
+                .anyMatch(s -> s.getAdmissionNumber().equals(admissionNumber));
+
+        if (!isParentsChild) {
+            throw new RuntimeException(
+                    "Student " + admissionNumber +
+                            " is not linked to your account.");
+        }
+
         return ResponseEntity.ok(
-                reportService.getStudentReport(admissionNumber, term, academicYear));
+                reportService.getStudentReport(
+                        admissionNumber, term, academicYear));
     }
 
     // ── Class report ──
@@ -82,13 +106,19 @@ public class ReportController {
     }
 
     // ── Parent dashboard ──
-    @GetMapping("/dashboard/parent/{parentId}")
+    @GetMapping("/dashboard/parent")
     @PreAuthorize("hasRole('PARENT')")
     public ResponseEntity<ParentDashboardDTO> getParentDashboard(
-            @PathVariable Long parentId,
+            @AuthenticationPrincipal String userId,   // from JWT token
             @RequestParam Term term,
             @RequestParam Integer academicYear) {
+
+        User parent = userRepository.findByUserName(userId)
+                .orElseThrow(() -> new RuntimeException(
+                        "Parent not found: " + userId));
+
         return ResponseEntity.ok(
-                dashboardService.getParentDashboard(parentId, term, academicYear));
+                dashboardService.getParentDashboard(
+                        parent.getId(), term, academicYear));
     }
 }

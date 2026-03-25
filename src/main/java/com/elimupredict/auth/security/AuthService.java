@@ -29,12 +29,12 @@ public class AuthService {
     public AuthResponse login(LoginRequest request){
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getUserName(),
+                        request.getUsername(),
                         request.getPassword()
                 )
         );
 
-        User user = userRepository.findByUserName(request.getUserName())
+        User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(()->new RuntimeException("User not found"));
 
         String token =jwtUtil.generateToken(user.getUsername(), user.getRole().name());
@@ -49,7 +49,7 @@ public class AuthService {
 
         return AuthResponse.builder()
                 .token(token)
-                .userName(user.getUsername())
+                .username(user.getUsername())
                 .role(user.getRole())
                 .message("Login successful")
                 .build();
@@ -57,12 +57,12 @@ public class AuthService {
     }
 
     public AuthResponse register(RegisterRequest request, String registerBy){
-        if(userRepository.existsByUserName(request.getUserName())){
-            throw new RuntimeException("Username "+request.getUserName() +" already exists");
+        if(userRepository.existsByUsername(request.getUsername())){
+            throw new RuntimeException("Username "+request.getUsername() +" already exists");
         }
 
         User user = User.builder()
-                .userName(request.getUserName())
+                .username(request.getUsername())
                 .isActive(true)
                 .createdBy(registerBy)
                 .password(passwordEncoder.encode(request.getFullName()))
@@ -75,7 +75,7 @@ public class AuthService {
         return AuthResponse.builder()
                 .message("User registered successfully")
                 .role(user.getRole())
-                .userName(user.getUsername())
+                .username(user.getUsername())
                 .build();
     }
 

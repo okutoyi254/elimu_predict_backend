@@ -10,14 +10,26 @@ import java.util.List;
 public class ParentDashboardDTO {
 
     private String parentId;
-    private String childName;
-    private String admissionNumber;
-    private String className;
+    private Integer totalChildren;
 
-    private String overallRiskLevel;
-    private String overallMessage;
+    private List<ChildSummaryDTO> children;
 
-    private List<StudentReportDTO.SubjectRiskDTO> subjectBreakdown;
 
+
+    @Data
+    @Builder
+    public static class ChildSummaryDTO{
+        private String admissionNumber;
+        private String fullName;
+        private String className;
+        private Integer enrollmentYear;
+        private String overallRiskLevel;
+        private String overallMessage;
+        private Double averageRiskScore;
+        private Integer trend;
+
+        private List<StudentReportDTO.SubjectRiskDTO> subjectBreakdown;
+
+    }
 
 }

@@ -27,13 +27,13 @@ public class UserService {
     public UserResponse registerUser(RegisterRequest request, String registeredBy){
 
      // Validate unique username
-        if(userRepository.existsByUserName(request.getUserName())){
+        if(userRepository.existsByUsername(request.getUserName())){
             throw new RuntimeException("Username already exists: "+request.getUserName());
         }
 
         User user= User.builder()
                 .fullName(request.getFullName())
-                .userName(request.getUserName())
+                .username(request.getUserName())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(request.getRole())
                 .isActive(true)
@@ -130,7 +130,7 @@ public class UserService {
     }
 
     public UserResponse getByUserId(String userName) {
-        return toResponse(userRepository.findByUserName(userName)
+        return toResponse(userRepository.findByUsername(userName)
                 .orElseThrow(() -> new RuntimeException(
                         "User not found: " + userName)));
     }
