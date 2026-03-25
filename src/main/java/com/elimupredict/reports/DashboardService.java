@@ -1,8 +1,8 @@
 package com.elimupredict.reports;
 
 import com.elimupredict.ai.AiAnalysis;
-import com.elimupredict.auth.user.User;
-import com.elimupredict.auth.user.UserRepository;
+import com.elimupredict.user.User;
+import com.elimupredict.user.UserRepository;
 import com.elimupredict.common.enums.Term;
 import com.elimupredict.reports.dto.*;
 import com.elimupredict.ai.AIAnalysisRepository;
@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

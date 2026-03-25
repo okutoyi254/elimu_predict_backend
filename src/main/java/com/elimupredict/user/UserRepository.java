@@ -1,4 +1,4 @@
-package com.elimupredict.auth.user;
+package com.elimupredict.user;
 
 import com.elimupredict.common.enums.Role;
 import org.springframework.data.jpa.repository.JpaRepository;

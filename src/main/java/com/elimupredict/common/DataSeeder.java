@@ -1,6 +1,6 @@
 package com.elimupredict.common;
 
-import com.elimupredict.auth.user.UserRepository;
+import com.elimupredict.user.UserRepository;
 import com.elimupredict.common.enums.ExamType;
 import com.elimupredict.common.enums.Role;
 import com.elimupredict.common.enums.Term;
@@ -52,7 +52,7 @@ public class DataSeeder implements CommandLineRunner {
         }
 
         userRepository.save(
-                com.elimupredict.auth.user.User.builder()
+                com.elimupredict.user.User.builder()
                         .userName(username)
                         .fullName(fullName)
                         .password(passwordEncoder.encode(password))

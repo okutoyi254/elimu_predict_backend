@@ -1,6 +1,6 @@
 package com.elimupredict.marks;
 
-import com.elimupredict.auth.user.UserRepository;
+import com.elimupredict.user.UserRepository;
 import com.elimupredict.common.enums.Term;
 import com.elimupredict.marks.dto.BulkMarksUploadRequest;
 import com.elimupredict.marks.dto.MarksUploadRequest;
@@ -11,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.w3c.dom.stylesheets.LinkStyle;
 
 import java.util.List;
 

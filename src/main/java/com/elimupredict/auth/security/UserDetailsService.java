@@ -1,6 +1,6 @@
 package com.elimupredict.auth.security;
 
-import com.elimupredict.auth.user.UserRepository;
+import com.elimupredict.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

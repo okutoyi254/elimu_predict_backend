@@ -1,4 +1,4 @@
-package com.elimupredict.auth.user;
+package com.elimupredict.user;
 
 import com.elimupredict.audit_logs.AuditLog;
 import com.elimupredict.audit_logs.AuditLogRepository;
