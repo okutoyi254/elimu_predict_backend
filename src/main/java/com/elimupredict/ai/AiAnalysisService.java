@@ -165,9 +165,17 @@ public class AiAnalysisService {
                 && mlResponse.getRiskPercentage() != null
                 && mlResponse.getRiskPercentage() >= 40.0
                 && (analysis.getSuggestion() == null
-                || analysis.getSuggestion().isEmpty())) {  // ← don't regenerate
+                || analysis.getSuggestion().isEmpty())) {
+            // ← don't regenerate
             suggestion = geminiService.generateSuggestion(
                     subjectName, mlResponse.getRiskPercentage(), marks);
+
+//            -----Set Analysis
+            analysis.setRiskPercentage(mlResponse.getRiskPercentage());
+            analysis.setRiskLevel(mlResponse.getRiskLevel());
+            analysis.setWeaknessGroup(mlResponse.getWeaknessGroup());
+            analysis.setTrend(mlResponse.getTrend());
+
         } else if (analysis.getSuggestion() != null) {
             suggestion = analysis.getSuggestion();  // reuse existing
         }
@@ -203,6 +211,7 @@ public class AiAnalysisService {
                 .analysisStatus(status)
                 .term(term.name())
                 .academicYear(academicYear)
+                .trend(mlResponse !=null ? mlResponse.getTrend() : null)
                 .build();
     }
 

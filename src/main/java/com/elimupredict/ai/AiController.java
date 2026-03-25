@@ -25,7 +25,7 @@ public class AiController {
             @RequestParam Term term,
             @RequestParam Integer academicYear) {
         return ResponseEntity.ok(
-                aiAnalysisService.analyzeStudent(admissionNumber, term, academicYear));
+                aiAnalysisService.analyzeStudent(admissionNumber, term, 2026));
     }
 
     // ── Trigger analysis for entire class ──
@@ -36,7 +36,7 @@ public class AiController {
             @RequestParam Term term,
             @RequestParam Integer academicYear) {
         return ResponseEntity.ok(
-                aiAnalysisService.analyzeClass(className, term, academicYear));
+                aiAnalysisService.analyzeClass(className, term, 2026));
     }
 
     // ── Get stored results for a student ──

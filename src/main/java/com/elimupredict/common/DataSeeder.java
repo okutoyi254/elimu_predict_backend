@@ -98,7 +98,7 @@ public class DataSeeder implements CommandLineRunner {
                             .admissionNumber(admissionNo)
                             .fullName("Student " + admissionNo)
                             .className("Form 1N")
-                            .enrollmentYear(2024)
+                            .enrollmentYear(2026)
                             .isActive(true)
                             .build());
                 }

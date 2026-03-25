@@ -42,7 +42,12 @@ public class AiAnalysis {
     private Term term;
 
     @Column(nullable = false)
-    private Integer academicYear;
+    private Integer academicYear = 2026;
+
+    @Column
+    private Integer trend;
+
+
 
     @Column(nullable = false)
     private String analysisStatus;      // PENDING, COMPLETED, FAILED
