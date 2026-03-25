@@ -1,5 +1,6 @@
 package com.elimupredict.marks;
 
+import com.elimupredict.common.ApiVersion;
 import com.elimupredict.user.UserRepository;
 import com.elimupredict.common.enums.Term;
 import com.elimupredict.marks.dto.BulkMarksUploadRequest;
@@ -16,7 +17,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/marks")
+@RequestMapping(ApiVersion.V1+"/marks")
 public class MarksController {
 
     private final MarksService marksService;
@@ -24,7 +25,7 @@ public class MarksController {
 
     private Long resolveName(String userName){
 
-        return userRepository.findByUserName(userName)
+        return userRepository.findByUsername(userName)
                 .orElseThrow(()->new RuntimeException("Invalid username!"))
                 .getId();
     }

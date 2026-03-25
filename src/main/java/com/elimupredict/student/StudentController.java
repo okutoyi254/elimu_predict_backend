@@ -1,5 +1,6 @@
 package com.elimupredict.student;
 
+import com.elimupredict.common.ApiVersion;
 import com.elimupredict.student.dto.StudentRequest;
 import com.elimupredict.student.dto.StudentResponse;
 import jakarta.validation.Valid;
@@ -13,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/students")
+@RequestMapping(ApiVersion.V1+"/students")
 public class StudentController {
 
     private final StudentService studentService;

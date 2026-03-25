@@ -1,6 +1,7 @@
 package com.elimupredict.ai;
 
 import com.elimupredict.ai.dto.AnalysisResponse;
+import com.elimupredict.common.ApiVersion;
 import com.elimupredict.common.enums.Term;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/ai")
+@RequestMapping(ApiVersion.V1+"/ai")
 @RequiredArgsConstructor
 public class AiController {
 
