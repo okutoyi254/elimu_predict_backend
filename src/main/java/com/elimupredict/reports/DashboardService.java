@@ -1,6 +1,7 @@
 package com.elimupredict.reports;
 
 import com.elimupredict.ai.AiAnalysis;
+import com.elimupredict.common.enums.Role;
 import com.elimupredict.user.User;
 import com.elimupredict.user.UserRepository;
 import com.elimupredict.common.enums.Term;
@@ -70,7 +71,8 @@ public class DashboardService {
                     try {
                         subjectName = subjectService.getById(a.getSubjectId())
                                 .getSubjectName();
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
 
                     return TeacherDashboardDTO.AtRiskStudentDTO.builder()
                             .admissionNumber(a.getAdmissionNumber())
@@ -149,6 +151,16 @@ public class DashboardService {
     public ParentDashboardDTO getParentDashboard(
             Long parentId, Term term, Integer academicYear) {
 
+//        Validate parent exists
+        User parent = userRepository.findById(parentId)
+                .orElseThrow(() -> new RuntimeException(
+                        "Parent not found: " + parentId));
+
+        if (parent.getRole() != Role.PARENT) {
+            throw new RuntimeException(
+                    "User " + parent.getUsername() + " is not a PARENT");
+        }
+
         List<Student> children = studentService.getByParentId(parentId)
                 .stream()
                 .map(s -> studentService.findOrThrow(s.getAdmissionNumber()))
@@ -156,28 +168,68 @@ public class DashboardService {
 
         if (children.isEmpty()) {
             throw new RuntimeException(
-                    "No student linked to parent ID: " + parentId);
+                    "No students linked to parent ID: " + parentId +
+                            ". Ask IT Handler to link your children to your account.");
         }
 
-        // Take first child (one parent = one child in this system)
-        Student child = children.get(0);
+//        Build summary for each student
+        List<ParentDashboardDTO.ChildSummaryDTO> childSummaries = children.stream().map(
+                child -> {
 
-        StudentReportDTO report = reportService.getStudentReport(
-                child.getAdmissionNumber(), term, academicYear);
+                    try {
+                        // Get full AI analysis for this child
+                        StudentReportDTO report = reportService.getStudentReport(
+                                child.getAdmissionNumber(), term, academicYear);
 
-        String message = buildParentMessage(report.getOverallRiskLevel(),
-                child.getFullName());
+                        // Get trend from latest analysis
+                        Integer trend = analysisRepository
+                                .findByAdmissionNumberAndTerm(
+                                        child.getAdmissionNumber(), term)
+                                .stream()
+                                .filter(a -> a.getTrend() != null)
+                                .mapToInt(AiAnalysis::getTrend)
+                                .findFirst()
+                                .orElse(0);
+
+                        return ParentDashboardDTO.ChildSummaryDTO.builder()
+                                .admissionNumber(child.getAdmissionNumber())
+                                .fullName(child.getFullName())
+                                .className(child.getClassName())
+                                .enrollmentYear(child.getEnrollmentYear())
+                                .overallRiskLevel(report.getOverallRiskLevel())
+                                .overallMessage(buildParentMessage(
+                                        report.getOverallRiskLevel(), child.getFullName()))
+                                .averageRiskScore(report.getAverageRiskScore())
+                                .trend(trend)
+                                .subjectBreakdown(report.getSubjectRisks())  // full detail
+                                .build();
+
+                    } catch (Exception e) {
+                        // Child not yet analyzed — return profile only
+                        return ParentDashboardDTO.ChildSummaryDTO.builder()
+                                .admissionNumber(child.getAdmissionNumber())
+                                .fullName(child.getFullName())
+                                .className(child.getClassName())
+                                .enrollmentYear(child.getEnrollmentYear())
+                                .overallRiskLevel("NOT_ANALYZED")
+                                .overallMessage(child.getFullName() +
+                                        "'s results have not been analyzed yet. " +
+                                        "Please wait for the teacher to run analysis.")
+                                .build();
+                    }
+                }).toList();
 
         return ParentDashboardDTO.builder()
                 .parentId(parentId.toString())
-                .childName(child.getFullName())
-                .admissionNumber(child.getAdmissionNumber())
-                .className(child.getClassName())
-                .overallRiskLevel(report.getOverallRiskLevel())
-                .overallMessage(message)
-                .subjectBreakdown(report.getSubjectRisks())
+                .totalChildren(childSummaries.size())
+                .children(childSummaries)
                 .build();
     }
+
+
+
+
+
 
     private String buildParentMessage(String riskLevel, String name) {
         return switch (riskLevel) {

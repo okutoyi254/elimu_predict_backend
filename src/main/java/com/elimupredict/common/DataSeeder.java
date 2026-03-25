@@ -46,14 +46,14 @@ public class DataSeeder implements CommandLineRunner {
        seedCsvData();
     }
     private  void seedUser(String username, String fullName, String password, Role role) {
-        if (userRepository.existsByUserName(username)) {
+        if (userRepository.existsByUsername(username)) {
             log.info("User {} already exists. Skipping seeding.", username);
             return;
         }
 
         userRepository.save(
                 com.elimupredict.user.User.builder()
-                        .userName(username)
+                        .username(username)
                         .fullName(fullName)
                         .password(passwordEncoder.encode(password))
                         .role(role)
