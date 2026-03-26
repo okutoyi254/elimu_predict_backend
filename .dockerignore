@@ -1,0 +1,31 @@
+# Maven
+target/
+.mvn/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# Git
+.git/
+.gitignore
+
+# Docs
+*.md
+docs/
+
+# Environment
+.env
+application-local.yml
+src/main/resources/application-local.yml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/

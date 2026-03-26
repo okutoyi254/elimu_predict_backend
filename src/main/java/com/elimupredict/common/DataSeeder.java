@@ -12,6 +12,7 @@ import com.elimupredict.subject.Subject;
 import com.elimupredict.subject.SubjectRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -24,6 +25,9 @@ import java.util.Objects;
 @RequiredArgsConstructor
 @Slf4j
 public class DataSeeder implements CommandLineRunner {
+
+    @Value("${spring.profiles.active:default}")
+    private String activeProfile;
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
