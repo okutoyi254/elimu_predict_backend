@@ -1,0 +1,707 @@
+{
+  "info": {
+    "name": "School Management API",
+    "description": "Postman collection for the School Management System API. All protected endpoints require a Bearer JWT token.\n\n**How to authenticate:**\n1. Run the `Login` request under `Auth`\n2. Copy the `token` from the response\n3. It is automatically set to the `jwt_token` collection variable via the login test script\n4. All other requests will use it automatically via `Authorization: Bearer {{jwt_token}}`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Authentication endpoints — login, register, and check current user.",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.token) {",
+                  "    pm.collectionVariables.set('jwt_token', json.token);",
+                  "    console.log('Token saved:', json.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"your_username\",\n  \"password\": \"your_password\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "description": "Logs in a user and returns a JWT token. The test script automatically saves the token to `{{jwt_token}}`."
+          }
+        },
+        {
+          "name": "Register (Auth)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"John Doe\",\n  \"userName\": \"johndoe\",\n  \"password\": \"password123\",\n  \"role\": \"TEACHER\",\n  \"admissionNumbers\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "register"]
+            },
+            "description": "Registers a new user via the auth endpoint."
+          }
+        },
+        {
+          "name": "Me (Current User)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "me"]
+            },
+            "description": "Returns details of the currently authenticated user."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "description": "User management — register, list, assign roles, revoke/restore access, and link parents to students.",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users"]
+            }
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/:userId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", ":userId"],
+              "variable": [{ "key": "userId", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "Get Users by Role",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/role/:role",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "role", ":role"],
+              "variable": [
+                {
+                  "key": "role",
+                  "value": "TEACHER",
+                  "description": "One of: TEACHER, SENIOR_TEACHER, ADMIN, PRINCIPAL, DEPUTY_PRINCIPAL, PARENT, IT_HANDLER"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Jane Smith\",\n  \"userName\": \"janesmith\",\n  \"password\": \"password123\",\n  \"role\": \"TEACHER\",\n  \"admissionNumbers\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "register"]
+            }
+          }
+        },
+        {
+          "name": "Admin Register User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Admin User\",\n  \"userName\": \"adminuser\",\n  \"password\": \"admin123\",\n  \"role\": \"ADMIN\",\n  \"admissionNumbers\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/admin/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "admin", "register"]
+            }
+          }
+        },
+        {
+          "name": "Assign Role to User",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/:id/assign-role?role=TEACHER",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", ":id", "assign-role"],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "TEACHER",
+                  "description": "One of: TEACHER, SENIOR_TEACHER, ADMIN, PRINCIPAL, DEPUTY_PRINCIPAL, PARENT, IT_HANDLER"
+                }
+              ],
+              "variable": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "Revoke User Access",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/:id/revoke",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", ":id", "revoke"],
+              "variable": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "Restore User Access",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/:id/restore",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", ":id", "restore"],
+              "variable": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "Link Parent to Student",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/:parentId/link-student/:admissionNumber",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", ":parentId", "link-student", ":admissionNumber"],
+              "variable": [
+                { "key": "parentId", "value": "5" },
+                { "key": "admissionNumber", "value": "ADM001" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Students",
+      "description": "Student registration, lookup by admission number, class, or parent.",
+      "item": [
+        {
+          "name": "Register Student",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"admissionNumber\": \"ADM001\",\n  \"fullName\": \"Alice Wanjiru\",\n  \"className\": \"Form 1A\",\n  \"parentId\": null,\n  \"enrollmentYear\": 2024\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/students",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "students"]
+            }
+          }
+        },
+        {
+          "name": "Get Student by Admission Number",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/students/:admissionNumber",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "students", ":admissionNumber"],
+              "variable": [{ "key": "admissionNumber", "value": "ADM001" }]
+            }
+          }
+        },
+        {
+          "name": "Update Student",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"admissionNumber\": \"ADM001\",\n  \"fullName\": \"Alice Wanjiru Updated\",\n  \"className\": \"Form 1B\",\n  \"parentId\": 5,\n  \"enrollmentYear\": 2024\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/students/:admissionNumber",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "students", ":admissionNumber"],
+              "variable": [{ "key": "admissionNumber", "value": "ADM001" }]
+            }
+          }
+        },
+        {
+          "name": "Get Students by Class",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/students/class/:className",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "students", "class", ":className"],
+              "variable": [{ "key": "className", "value": "Form 1A" }]
+            }
+          }
+        },
+        {
+          "name": "Get Students by Parent ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/students/parent/:parentId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "students", "parent", ":parentId"],
+              "variable": [{ "key": "parentId", "value": "5" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subjects",
+      "description": "Create and retrieve subjects, optionally filtered by class.",
+      "item": [
+        {
+          "name": "Get All Subjects",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/subjects",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subjects"]
+            }
+          }
+        },
+        {
+          "name": "Get Subjects by Class",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/subjects/class/:className",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subjects", "class", ":className"],
+              "variable": [{ "key": "className", "value": "Form 1A" }]
+            }
+          }
+        },
+        {
+          "name": "Create Subject",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subjectCode\": \"MAT101\",\n  \"subjectName\": \"Mathematics\",\n  \"teacherId\": 2,\n  \"className\": \"Form 1A\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/subjects",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "subjects"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Marks",
+      "description": "Upload, bulk upload, update, and retrieve student marks records.",
+      "item": [
+        {
+          "name": "Upload Marks (Single)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"admissionNumber\": \"ADM001\",\n  \"subjectId\": 1,\n  \"marksObtained\": 75.5,\n  \"examType\": \"CAT_1\",\n  \"term\": \"TERM_1\",\n  \"academicYear\": 2024\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/marks",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "marks"]
+            },
+            "description": "examType: CAT_1, CAT_2, CAT_3, EXAM_1, EXAM_2\nterm: TERM_1, TERM_2, TERM_3\nmarksObtained: 0–100"
+          }
+        },
+        {
+          "name": "Bulk Upload Marks",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"records\": [\n    {\n      \"admissionNumber\": \"ADM001\",\n      \"subjectId\": 1,\n      \"marksObtained\": 75.5,\n      \"examType\": \"CAT_1\",\n      \"term\": \"TERM_1\",\n      \"academicYear\": 2024\n    },\n    {\n      \"admissionNumber\": \"ADM002\",\n      \"subjectId\": 1,\n      \"marksObtained\": 60.0,\n      \"examType\": \"CAT_1\",\n      \"term\": \"TERM_1\",\n      \"academicYear\": 2024\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/marks/bulk",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "marks", "bulk"]
+            }
+          }
+        },
+        {
+          "name": "Update Marks",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/api/v1/marks/:id?marks=80.0",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "marks", ":id"],
+              "query": [{ "key": "marks", "value": "80.0" }],
+              "variable": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "Get Marks by Student",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/marks/student/:admissionNumber",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "marks", "student", ":admissionNumber"],
+              "variable": [{ "key": "admissionNumber", "value": "ADM001" }]
+            }
+          }
+        },
+        {
+          "name": "Get Marks by Student and Term",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/marks/student/:admissionNumber/term/:term",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "marks", "student", ":admissionNumber", "term", ":term"],
+              "variable": [
+                { "key": "admissionNumber", "value": "ADM001" },
+                { "key": "term", "value": "TERM_1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Class Marks by Subject, Term & Year",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/marks/class/subject/:subjectId/term/:term/year/:year",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "marks", "class", "subject", ":subjectId", "term", ":term", "year", ":year"],
+              "variable": [
+                { "key": "subjectId", "value": "1" },
+                { "key": "term", "value": "TERM_1" },
+                { "key": "year", "value": "2024" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboards",
+      "description": "Role-specific dashboards. Each endpoint returns data scoped to the authenticated user's role.",
+      "item": [
+        {
+          "name": "Teacher Dashboard",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/dashboard/teacher?term=TERM_1&academicYear=2024",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "dashboard", "teacher"],
+              "query": [
+                { "key": "term", "value": "TERM_1" },
+                { "key": "academicYear", "value": "2024" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Senior Teacher Dashboard",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/dashboard/senior?term=TERM_1&academicYear=2024",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "dashboard", "senior"],
+              "query": [
+                { "key": "term", "value": "TERM_1" },
+                { "key": "academicYear", "value": "2024" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Principal Dashboard",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/dashboard/principal?term=TERM_1&academicYear=2024",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "dashboard", "principal"],
+              "query": [
+                { "key": "term", "value": "TERM_1" },
+                { "key": "academicYear", "value": "2024" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Parent Dashboard",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/dashboard/parent?term=TERM_1&academicYear=2024",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "dashboard", "parent"],
+              "query": [
+                { "key": "term", "value": "TERM_1" },
+                { "key": "academicYear", "value": "2024" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Parent - Get Child Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/dashboard/parent/child/:admissionNumber?term=TERM_1&academicYear=2024",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "dashboard", "parent", "child", ":admissionNumber"],
+              "query": [
+                { "key": "term", "value": "TERM_1" },
+                { "key": "academicYear", "value": "2024" }
+              ],
+              "variable": [{ "key": "admissionNumber", "value": "ADM001" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "description": "School-wide and class-level academic reports.",
+      "item": [
+        {
+          "name": "School Overview Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/reports/school?term=TERM_1&academicYear=2024",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "reports", "school"],
+              "query": [
+                { "key": "term", "value": "TERM_1" },
+                { "key": "academicYear", "value": "2024" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Class Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/reports/class/:className?term=TERM_1&academicYear=2024",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "reports", "class", ":className"],
+              "query": [
+                { "key": "term", "value": "TERM_1" },
+                { "key": "academicYear", "value": "2024" }
+              ],
+              "variable": [{ "key": "className", "value": "Form 1A" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI Analysis",
+      "description": "AI-powered student and class risk analysis endpoints.",
+      "item": [
+        {
+          "name": "Analyze Student (Trigger)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/v1/ai/analyze/student/:admissionNumber?term=TERM_1&academicYear=2024",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "ai", "analyze", "student", ":admissionNumber"],
+              "query": [
+                { "key": "term", "value": "TERM_1" },
+                { "key": "academicYear", "value": "2024" }
+              ],
+              "variable": [{ "key": "admissionNumber", "value": "ADM001" }]
+            },
+            "description": "Triggers AI analysis for a single student. Returns AnalysisResponse array with riskLevel, riskPercentage, and suggestion per subject."
+          }
+        },
+        {
+          "name": "Analyze Class (Trigger)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/v1/ai/analyze/class/:className?term=TERM_1&academicYear=2024",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "ai", "analyze", "class", ":className"],
+              "query": [
+                { "key": "term", "value": "TERM_1" },
+                { "key": "academicYear", "value": "2024" }
+              ],
+              "variable": [{ "key": "className", "value": "Form 1A" }]
+            },
+            "description": "Triggers AI analysis for all students in a class. Returns a map of admissionNumber → AnalysisResponse[]."
+          }
+        },
+        {
+          "name": "Get Student AI Results (by Term)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/ai/results/student/:admissionNumber?term=TERM_1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "ai", "results", "student", ":admissionNumber"],
+              "query": [{ "key": "term", "value": "TERM_1" }],
+              "variable": [{ "key": "admissionNumber", "value": "ADM001" }]
+            }
+          }
+        },
+        {
+          "name": "Get All Student AI Results (All Terms)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/ai/results/student/:admissionNumber/all",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "ai", "results", "student", ":admissionNumber", "all"],
+              "variable": [{ "key": "admissionNumber", "value": "ADM001" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "description": "Admin-only endpoints — user management, role assignment, and audit logs.",
+      "item": [
+        {
+          "name": "Get All Users (Admin)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "users"]
+            }
+          }
+        },
+        {
+          "name": "Assign Role (Admin)",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users/:id/assign-role?role=TEACHER",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "users", ":id", "assign-role"],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "TEACHER",
+                  "description": "One of: TEACHER, SENIOR_TEACHER, ADMIN, PRINCIPAL, DEPUTY_PRINCIPAL, PARENT, IT_HANDLER"
+                }
+              ],
+              "variable": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "Revoke Role (Admin)",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users/:id/revoke-role",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "users", ":id", "revoke-role"],
+              "variable": [{ "key": "id", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "Get All Audit Logs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/logs",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "logs"]
+            }
+          }
+        },
+        {
+          "name": "Get Audit Logs by User",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/logs/user/:userId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "logs", "user", ":userId"],
+              "variable": [{ "key": "userId", "value": "1" }]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
