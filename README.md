@@ -45,9 +45,14 @@ psql -U postgres -c "CREATE DATABASE elimu_predict;"
 # Run
 ./mvnw spring-boot:run
 ```
+## Live Demo
+Backend API(Base URL): https://elimu-predict-backend.onrender.com
 
-### API Documentation
-Once running, visit: http://localhost:8080/swagger-ui.html
+## API Documentation
+Frontend integration guide and Postman collection are in the [`/docs`] folder.
+
+
+
 
 ## Project Structure
 ```
@@ -71,15 +76,15 @@ src/main/java/com/elimupredict/
 - [x] Sprint 5 — Reports, Dashboards & Testing
 
 ## Team
-| Name | Role                                    |
-|---|-----------------------------------------|
-| Lovingstone Ochieng | Group Leader & Dev Supervision          |
-| James Okutoyi | Backend and AI Integration              |
-| Herine Adhiambo | Frontend                                |
-| Stanley Makhanu | Frontend                                |
-| Aaron Mutua | AI model training  & Dashboard Creation |
-| Nick Naftali | Testing & Documentation                 |
-| Dennis Kipleting | Frontend                                |
+| Name | Role                                        |
+|---|---------------------------------------------|
+| Lovingstone Ochieng | Group Leader & Dev Supervision              |
+| James Okutoyi | Backend and AI Integration                  |
+| Herine Adhiambo | Frontend                                    |
+| Stanley Makhanu | Frontend                                    |
+| Aaron Mutua | AI model training  & Frontend Dashboard dev |
+| Nick Naftali | Testing & Documentation                     |
+| Dennis Kipleting | Frontend                                    |
 
 ## License
 MIT License — Masinde Muliro University of Science and Technology
