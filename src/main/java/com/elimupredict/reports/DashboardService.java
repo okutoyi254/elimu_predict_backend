@@ -1,7 +1,9 @@
 package com.elimupredict.reports;
 
 import com.elimupredict.ai.AiAnalysis;
+import com.elimupredict.ai.AiAnalysisService;
 import com.elimupredict.common.enums.Role;
+import com.elimupredict.student.dto.StudentResponse;
 import com.elimupredict.user.User;
 import com.elimupredict.user.UserRepository;
 import com.elimupredict.common.enums.Term;
@@ -11,6 +13,8 @@ import com.elimupredict.student.Student;
 import com.elimupredict.student.StudentService;
 import com.elimupredict.subject.SubjectService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -20,11 +24,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DashboardService {
 
+    private final Logger log= LoggerFactory.getLogger(DashboardService.class);
     private final AIAnalysisRepository analysisRepository;
     private final StudentService studentService;
     private final SubjectService subjectService;
     private final UserRepository userRepository;
     private final ReportService reportService;
+    private final AiAnalysisService aiAnalysisService;
 
     // ── Teacher dashboard ──
     public TeacherDashboardDTO getTeacherDashboard(
@@ -109,18 +115,51 @@ public class DashboardService {
 
     // ── Senior Teacher dashboard ──
     public SeniorDashboardDTO getSeniorDashboard(
-            String userId,String className, Term term, Integer academicYear) {
+            String userId, String className,
+            Term term, Integer academicYear) {
 
+        List<StudentResponse> students = studentService.getStudentsByClassName(className);
+        if (students.isEmpty()) {
+            throw new RuntimeException(
+                    "No students found in class: " + className);
+        }
+
+        // Check if analysis exists for this class
+        List<String> admissionNumbers = students.stream()
+                .map(StudentResponse::getAdmissionNumber)
+                .toList();
+
+        List<AiAnalysis> existingAnalysis = analysisRepository
+                .findByStudentsAndTerm(admissionNumbers, term, academicYear);
+
+        // ── Auto-trigger analysis if none exists ──
+        if (existingAnalysis.isEmpty()) {
+            log.info("[SENIOR DASHBOARD] No analysis found for {} {} {} " +
+                    "— triggering now...", className, term, academicYear);
+            try {
+                aiAnalysisService.analyzeClass(className, term, academicYear);
+            } catch (Exception e) {
+                log.error("[SENIOR DASHBOARD] Auto-analysis failed — {}",
+                        e.getMessage());
+                throw new RuntimeException(
+                        "No analysis data found for " + className +
+                                ". Please run analysis first via " +
+                                "POST /api/ai/analyze/class/" + className.replace(" ", "%20") +
+                                "?term=" + term + "&academicYear=" + academicYear);
+            }
+        }
+
+        // Now build the report
         ClassReportDTO classReport = reportService
                 .getClassReport(className, term, academicYear);
 
-        // Build resource allocation recommendations
         List<SeniorDashboardDTO.ResourceAllocationDTO> recommendations =
                 classReport.getSubjectWeaknesses().stream()
                         .map(w -> {
-                            String priority = w.getWeaknessPercentage() >= 60 ? "HIGH"
-                                    : w.getWeaknessPercentage() >= 30 ? "MEDIUM"
-                                    : "LOW";
+                            String priority = w.getWeaknessPercentage() >= 60
+                                    ? "HIGH"
+                                    : w.getWeaknessPercentage() >= 30
+                                    ? "MEDIUM" : "LOW";
 
                             String action = w.getWeaknessPercentage() >= 60
                                     ? "Allocate additional teacher and study materials"
