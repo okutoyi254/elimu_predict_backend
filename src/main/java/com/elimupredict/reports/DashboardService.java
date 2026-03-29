@@ -109,10 +109,10 @@ public class DashboardService {
 
     // ── Senior Teacher dashboard ──
     public SeniorDashboardDTO getSeniorDashboard(
-            String userId, Term term, Integer academicYear) {
+            String userId,String className, Term term, Integer academicYear) {
 
         ClassReportDTO classReport = reportService
-                .getClassReport("Form 3A", term, academicYear);
+                .getClassReport(className, term, academicYear);
 
         // Build resource allocation recommendations
         List<SeniorDashboardDTO.ResourceAllocationDTO> recommendations =

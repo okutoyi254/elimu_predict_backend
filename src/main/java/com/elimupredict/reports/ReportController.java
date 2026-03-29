@@ -90,10 +90,11 @@ public class ReportController {
     @PreAuthorize("hasRole('SENIOR_TEACHER')")
     public ResponseEntity<SeniorDashboardDTO> getSeniorDashboard(
             @AuthenticationPrincipal String userId,
+            @RequestParam String className,
             @RequestParam Term term,
             @RequestParam Integer academicYear) {
         return ResponseEntity.ok(
-                dashboardService.getSeniorDashboard(userId, term, academicYear));
+                dashboardService.getSeniorDashboard(userId,className, term, academicYear));
     }
 
     // ── Principal / Deputy dashboard ──
