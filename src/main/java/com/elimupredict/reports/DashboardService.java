@@ -139,6 +139,7 @@ public class DashboardService {
 
         return SeniorDashboardDTO.builder()
                 .seniorTeacherId(userId)
+                .className(className)
                 .resourceRecommendations(recommendations)
                 .overallWeaknesses(classReport.getSubjectWeaknesses())
                 .totalAtRiskStudents(
