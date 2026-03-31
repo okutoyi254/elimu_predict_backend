@@ -74,15 +74,17 @@ public class ReportController {
                 reportService.getSchoolOverview(term, academicYear));
     }
 
-    // ── Teacher dashboard ──
     @GetMapping("/dashboard/teacher")
     @PreAuthorize("hasRole('TEACHER')")
     public ResponseEntity<TeacherDashboardDTO> getTeacherDashboard(
             @AuthenticationPrincipal String userId,
+            @RequestParam String className,       // ← selected from dropdown
+            @RequestParam Long subjectId,         // ← selected from dropdown
             @RequestParam Term term,
             @RequestParam Integer academicYear) {
         return ResponseEntity.ok(
-                dashboardService.getTeacherDashboard(userId, term, academicYear));
+                dashboardService.getTeacherDashboard(
+                        userId, className, subjectId, term, academicYear));
     }
 
     // ── Senior teacher dashboard ──
