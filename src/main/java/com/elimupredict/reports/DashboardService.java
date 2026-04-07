@@ -1,7 +1,11 @@
 package com.elimupredict.reports;
 
 import com.elimupredict.ai.AiAnalysis;
+import com.elimupredict.ai.AiAnalysisService;
 import com.elimupredict.common.enums.Role;
+import com.elimupredict.student.dto.StudentResponse;
+import com.elimupredict.subject.Subject;
+import com.elimupredict.subject.TeacherAssignmentRepository;
 import com.elimupredict.user.User;
 import com.elimupredict.user.UserRepository;
 import com.elimupredict.common.enums.Term;
@@ -11,6 +15,8 @@ import com.elimupredict.student.Student;
 import com.elimupredict.student.StudentService;
 import com.elimupredict.subject.SubjectService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -20,36 +26,36 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DashboardService {
 
+    private final Logger log= LoggerFactory.getLogger(DashboardService.class);
     private final AIAnalysisRepository analysisRepository;
     private final StudentService studentService;
     private final SubjectService subjectService;
     private final UserRepository userRepository;
     private final ReportService reportService;
+    private final AiAnalysisService aiAnalysisService;
+    private final TeacherAssignmentRepository assignmentRepository;
 
     // ── Teacher dashboard ──
     public TeacherDashboardDTO getTeacherDashboard(
-            String teacherId, Term term, Integer academicYear) {
+            String teacherUserId, String className,
+            Long subjectId, Term term, Integer academicYear) {
 
-        User teacher = userRepository.findByUsername(teacherId)
+        User teacher = userRepository.findByUsername(teacherUserId)
                 .orElseThrow(() -> new RuntimeException(
-                        "Teacher not found: " + teacherId));
+                        "Teacher not found: " + teacherUserId));
 
-        // Get subjects assigned to this teacher
-        List<Long> subjectIds = subjectService
-                .getByTeacher(teacher.getId())
-                .stream().map(s -> s.getId()).toList();
+        // Verify teacher is actually assigned to this class + subject
+        boolean isAssigned = assignmentRepository
+                .existsByTeacherIdAndSubjectIdAndClassName(
+                        teacher.getId(), subjectId, className);
 
-        if (subjectIds.isEmpty()) {
+        if (!isAssigned) {
             throw new RuntimeException(
-                    "No subjects assigned to teacher: " + teacherId);
+                    "You are not assigned to subject " + subjectId +
+                            " in class " + className);
         }
 
-        // Get class from first subject
-        String className = subjectService
-                .getByTeacher(teacher.getId())
-                .get(0).getClassName();
-
-        // Get all students in class
+        // Get all students in the selected class
         List<Student> students = studentService.getStudentsByClassName(className)
                 .stream()
                 .map(s -> studentService.findOrThrow(s.getAdmissionNumber()))
@@ -58,28 +64,28 @@ public class DashboardService {
         List<String> admNos = students.stream()
                 .map(Student::getAdmissionNumber).toList();
 
+        // Get AI analysis for this class + subject only
         List<AiAnalysis> analyses = analysisRepository
-                .findByStudentsAndTerm(admNos, term, academicYear);
+                .findByStudentsAndTerm(admNos, term, academicYear)
+                .stream()
+                .filter(a -> a.getSubjectId().equals(subjectId))
+                .toList();
 
-        // Build at-risk student list
+        // Build at-risk list
         List<TeacherDashboardDTO.AtRiskStudentDTO> atRisk = analyses.stream()
                 .filter(a -> "HIGH".equals(a.getRiskLevel())
                         || "MEDIUM".equals(a.getRiskLevel()))
                 .map(a -> {
-                    Student s = studentService.findOrThrow(a.getAdmissionNumber());
-                    String subjectName = "Unknown";
-                    try {
-                        subjectName = subjectService.getById(a.getSubjectId())
-                                .getSubjectName();
-                    } catch (Exception ignored) {
-                    }
+                    Student s = studentService
+                            .findOrThrow(a.getAdmissionNumber());
+                    Subject subject = subjectService.getById(subjectId);
 
                     return TeacherDashboardDTO.AtRiskStudentDTO.builder()
                             .admissionNumber(a.getAdmissionNumber())
                             .fullName(s.getFullName())
                             .riskLevel(a.getRiskLevel())
                             .riskPercentage(a.getRiskPercentage())
-                            .weakestSubject(subjectName)
+                            .weakestSubject(subject.getSubjectName())
                             .suggestion(a.getSuggestion())
                             .build();
                 })
@@ -93,34 +99,60 @@ public class DashboardService {
         long medCount = atRisk.stream()
                 .filter(a -> "MEDIUM".equals(a.getRiskLevel())).count();
 
-        // Class weaknesses
-        ClassReportDTO classReport = reportService
-                .getClassReport(className, term, academicYear);
-
         return TeacherDashboardDTO.builder()
-                .teacherId(teacherId)
+                .teacherId(teacherUserId)
                 .teacherName(teacher.getFullName())
                 .atRiskStudents(atRisk)
                 .highRiskCount(highCount)
                 .mediumRiskCount(medCount)
-                .classWeaknesses(classReport.getSubjectWeaknesses())
                 .build();
-    }
-
-    // ── Senior Teacher dashboard ──
+    }// ── Senior Teacher dashboard ──
     public SeniorDashboardDTO getSeniorDashboard(
-            String userId,String className, Term term, Integer academicYear) {
+            String userId, String className,
+            Term term, Integer academicYear) {
 
+        List<StudentResponse> students = studentService.getStudentsByClassName(className);
+        if (students.isEmpty()) {
+            throw new RuntimeException(
+                    "No students found in class: " + className);
+        }
+
+        // Check if analysis exists for this class
+        List<String> admissionNumbers = students.stream()
+                .map(StudentResponse::getAdmissionNumber)
+                .toList();
+
+        List<AiAnalysis> existingAnalysis = analysisRepository
+                .findByStudentsAndTerm(admissionNumbers, term, academicYear);
+
+        // ── Auto-trigger analysis if none exists ──
+        if (existingAnalysis.isEmpty()) {
+            log.info("[SENIOR DASHBOARD] No analysis found for {} {} {} " +
+                    "— triggering now...", className, term, academicYear);
+            try {
+                aiAnalysisService.analyzeClass(className, term, academicYear);
+            } catch (Exception e) {
+                log.error("[SENIOR DASHBOARD] Auto-analysis failed — {}",
+                        e.getMessage());
+                throw new RuntimeException(
+                        "No analysis data found for " + className +
+                                ". Please run analysis first via " +
+                                "POST /api/ai/analyze/class/" + className.replace(" ", "%20") +
+                                "?term=" + term + "&academicYear=" + academicYear);
+            }
+        }
+
+        // Now build the report
         ClassReportDTO classReport = reportService
                 .getClassReport(className, term, academicYear);
 
-        // Build resource allocation recommendations
         List<SeniorDashboardDTO.ResourceAllocationDTO> recommendations =
                 classReport.getSubjectWeaknesses().stream()
                         .map(w -> {
-                            String priority = w.getWeaknessPercentage() >= 60 ? "HIGH"
-                                    : w.getWeaknessPercentage() >= 30 ? "MEDIUM"
-                                    : "LOW";
+                            String priority = w.getWeaknessPercentage() >= 60
+                                    ? "HIGH"
+                                    : w.getWeaknessPercentage() >= 30
+                                    ? "MEDIUM" : "LOW";
 
                             String action = w.getWeaknessPercentage() >= 60
                                     ? "Allocate additional teacher and study materials"
@@ -139,6 +171,7 @@ public class DashboardService {
 
         return SeniorDashboardDTO.builder()
                 .seniorTeacherId(userId)
+                .className(className)
                 .resourceRecommendations(recommendations)
                 .overallWeaknesses(classReport.getSubjectWeaknesses())
                 .totalAtRiskStudents(
