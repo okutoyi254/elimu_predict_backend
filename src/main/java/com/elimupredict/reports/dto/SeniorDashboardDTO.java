@@ -10,6 +10,7 @@ import java.util.List;
 public class SeniorDashboardDTO {
 
     private String seniorTeacherId;
+    private String className;
 
     private List<ResourceAllocationDTO> resourceRecommendations;
 
