@@ -27,13 +27,13 @@ public class UserService {
     public UserResponse registerUser(RegisterRequest request, String registeredBy){
 
      // Validate unique username
-        if(userRepository.existsByUsername(request.getUserName())){
-            throw new RuntimeException("Username already exists: "+request.getUserName());
+        if(userRepository.existsByUsername(request.getUsername())){
+            throw new RuntimeException("Username already exists: "+request.getUsername());
         }
 
         User user= User.builder()
                 .fullName(request.getFullName())
-                .username(request.getUserName())
+                .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(request.getRole())
                 .isActive(true)
@@ -57,10 +57,11 @@ public class UserService {
             }
         }
 
+
         log.info("[USER SERVICE] {} registered {} with role {}",
                 registeredBy,saved.getUsername(),saved.getRole());
 
-        return toResponse(user);
+        return toResponse(saved);
 
     }
 
