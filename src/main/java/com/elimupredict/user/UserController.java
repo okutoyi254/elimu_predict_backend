@@ -6,6 +6,7 @@ import com.elimupredict.user.dto.RegisterRequest;
 import com.elimupredict.user.dto.UserResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,6 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping(ApiVersion.V1+"/users")
 @RequiredArgsConstructor
+@Slf4j
 public class UserController {
 
     private final UserService userService;
@@ -29,6 +31,9 @@ public class UserController {
             @Valid @RequestBody RegisterRequest request,
             @AuthenticationPrincipal String registeredBy) {
 
+        log.info("REQUEST: {}", request);
+        log.info("FULL NAME: {}", request.getFullName());
+        log.info("USERNAME: {}", request.getUsername());
         // IT_HANDLER cannot register ADMIN
         if (request.getRole() == Role.ADMIN) {
             throw new RuntimeException(
