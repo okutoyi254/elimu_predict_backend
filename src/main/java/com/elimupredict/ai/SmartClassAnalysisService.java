@@ -177,4 +177,18 @@ public class SmartClassAnalysisService {
                                 ::getHiddenStrugglerCount).sum())
                 .build();
     }
+
+
+    private double calculateStdDev(List<AiAnalysis> analyses){
+
+        double avg = analyses.stream()
+                .mapToDouble(AiAnalysis::getRiskPercentage)
+                .average().orElse(0.0);
+
+        double variance = analyses.stream()
+                .mapToDouble(a -> Math.pow(a.getRiskPercentage() - avg, 2))
+                .average().orElse(0.0);
+
+        return Math.sqrt(variance);
+    }
 }
