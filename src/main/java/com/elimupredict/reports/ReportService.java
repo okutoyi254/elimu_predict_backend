@@ -256,12 +256,78 @@ public class ReportService {
                 .build();
     }
 
-    // ── Helper ──
+
     private String determineOverallRisk(List<AiAnalysis> analyses) {
         if (analyses.stream().anyMatch(a -> "HIGH".equals(a.getRiskLevel())))
             return "HIGH";
         if (analyses.stream().anyMatch(a -> "MEDIUM".equals(a.getRiskLevel())))
             return "MEDIUM";
         return "LOW";
+    }
+
+    public ProgressTimeLineDTO getProgressTimeLine(String admissionNumber) {
+
+        var student = studentService.findOrThrow(admissionNumber);
+        var allAnalyses = analysisRepository.findByAdmissionNumber(admissionNumber);
+
+//        Group by term and year
+        var timeline = allAnalyses.stream()
+                .collect(Collectors.groupingBy(
+                        a -> a.getTerm().name() + "-" + a.getAcademicYear()))
+                .values().stream().map(analyses -> {
+
+                    double avgRisk = analyses.stream()
+                            .filter(a -> a.getRiskPercentage() != null)
+                            .mapToDouble(AiAnalysis::getRiskPercentage)
+                            .average().orElse(0.0);
+
+                    List<ProgressTimeLineDTO.SubjectSnapshotDTO> subjects =
+                            analyses.stream().map(a -> {
+                                Subject sub = subjectService.getById(a.getSubjectId());
+                                return ProgressTimeLineDTO.SubjectSnapshotDTO.builder()
+                                        .subjectName(sub.getSubjectName())
+                                        .riskPercentage(a.getRiskPercentage())
+                                        .riskLevel(a.getRiskLevel())
+                                        .trend(a.getTrend())
+                                        .build();
+                            }).toList();
+
+                    return ProgressTimeLineDTO.TermSnapshotDTO.builder()
+                            .term(analyses.get(0).getTerm().name())
+                            .academicYear(analyses.get(0).getAcademicYear())
+                            .averageRiskScore(Math.round(avgRisk * 10.0) / 10.0)
+                            .overallRiskLeve(determineOverallRisk(analyses))
+                            .subjectPerformances(subjects)
+                            .build();
+                }).sorted(Comparator.comparing(
+                                ProgressTimeLineDTO.TermSnapshotDTO::getAcademicYear)
+                        .thenComparing(ProgressTimeLineDTO.TermSnapshotDTO::getTerm))
+                .toList();
+
+//        Find trajectory for the student
+        String trajectory = "STABLE";
+        String message = student.getFullName() + " is maintaining a consistent performance";
+
+        if (timeline.size() >= 2) {
+
+            double first = timeline.getFirst().getAverageRiskScore();
+            double last = timeline.getLast().getAverageRiskScore();
+            if (last - first > 10) {
+                trajectory = "DECLINING";
+                message = student.getFullName() +
+                        " shows a concerning decline in performance. " +
+                        "Immediate intervention recommended.";
+            } else if (first - last > 10) {
+                trajectory = "IMPROVING";
+                message = student.getFullName() +
+                        " is showing great improvement. Keep encouraging.";
+            }
+        }
+
+        return ProgressTimeLineDTO.builder()
+                .admissionNumber(admissionNumber)
+                .fullName(student.getFullName())
+                .timeLine(timeline)
+                .overallTrajectory(trajectory).comment(message).build();
     }
 }
