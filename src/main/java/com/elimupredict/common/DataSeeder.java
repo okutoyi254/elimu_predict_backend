@@ -48,6 +48,9 @@ public class DataSeeder implements CommandLineRunner {
         seedUser("PAR001", "Herine Adhiambo", "parent123", Role.PARENT);
 
        seedCsvData();
+
+//       Seed the seven subjects
+        seedMultiSubjectData();
     }
     private  void seedUser(String username, String fullName, String password, Role role) {
         if (userRepository.existsByUsername(username)) {
@@ -72,7 +75,7 @@ public class DataSeeder implements CommandLineRunner {
 
         if(recordRepository.count() > 0) return;
 
-        Subject subject = subjectRepository.findBySubjectCode("GEN101")
+        Subject subject = subjectRepository.findBySubjectCode("GEO101")
                 .orElseGet(()-> subjectRepository.save(Subject.builder()
                         .subjectCode("GEO101")
                         .subjectName("Geography")
@@ -138,5 +141,130 @@ public class DataSeeder implements CommandLineRunner {
         } catch (Exception ex){
             log.error("Failed to seed CSV data: {}",ex.getMessage());
         }
+    }
+
+    private void seedMultiSubjectData() {
+
+        // Check if multi-subject data already seeded
+        if (subjectRepository.count() > 1) {
+            log.info("[SEEDER] Multi-subject data already exists. Skipping.");
+            return;
+        }
+
+        // Create all subjects first
+        Subject math = getOrCreateSubject(
+                "MATH101", "Mathematics", "Form 1N");
+        Subject english = getOrCreateSubject(
+                "ENG101", "English", "Form 1N");
+        Subject biology = getOrCreateSubject(
+                "BIO101", "Biology", "Form 1N");
+        Subject chemistry = getOrCreateSubject(
+                "CHEM101", "Chemistry", "Form 1N");
+        Subject history = getOrCreateSubject(
+                "HIST101", "History", "Form 1N");
+        Subject physics = getOrCreateSubject(
+                "PHY101", "Physics", "Form 1N");
+        Subject computer = getOrCreateSubject(
+                "COMP101", "Computer Studies", "Form 1N");
+
+        log.info("[SEEDER] All subjects created. Seeding multi-subject data...");
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(
+                Objects.requireNonNull(
+                        getClass().getResourceAsStream(
+                                "/data/multi_subject_data.csv"))))) {
+
+            String line;
+            boolean firstLine = true;
+            int count = 0;
+
+            while ((line = br.readLine()) != null) {
+                if (firstLine) { firstLine = false; continue; }
+
+                String[] cols = line.split(",");
+
+
+                String admissionNo = cols[0].trim();
+                int subjectIdFromCsv = Integer.parseInt(cols[1].trim());
+                // cols[2] is subject_name — skip, we use our DB subject
+
+                double[] marks = {
+                        Double.parseDouble(cols[3].trim()), // cat_1
+                        Double.parseDouble(cols[4].trim()), // cat_2
+                        Double.parseDouble(cols[5].trim()), // cat_3
+                        Double.parseDouble(cols[6].trim()), // exam_1
+                        Double.parseDouble(cols[7].trim())  // exam_2
+                };
+
+                // Map CSV subject_id to actual DB subject
+                Subject subject = switch (subjectIdFromCsv) {
+                    case 2 -> math;
+                    case 3 -> english;
+                    case 4 -> biology;
+                    case 5 -> chemistry;
+                    case 6 -> history;
+                    case 7 -> physics;
+                    case 8 -> computer;
+                    default -> null;
+                };
+
+                if (subject == null) continue;
+
+                // Student already registered from Geography seed
+                // But register if somehow missing
+                if (!studentRepository.existsByAdmissionNumber(admissionNo)) {
+                    studentRepository.save(Student.builder()
+                            .admissionNumber(admissionNo)
+                            .fullName("Student " + admissionNo)
+                            .className("Form 1N")
+                            .enrollmentYear(2026)
+                            .isActive(true)
+                            .build());
+                }
+
+                ExamType[] types = {
+                        ExamType.CAT_1, ExamType.CAT_2, ExamType.CAT_3,
+                        ExamType.EXAM_1, ExamType.EXAM_2
+                };
+
+                for (int i = 0; i < marks.length; i++) {
+                    // Avoid duplicates
+                    if (!recordRepository
+                            .existsByAdmissionNumberAndSubjectIdAndExamTypeAndTermAndAcademicYear(
+                                    admissionNo, subject.getId(),
+                                    types[i], Term.TERM_1, 2026)) {
+
+                        recordRepository.save(StudentRecord.builder()
+                                .admissionNumber(admissionNo)
+                                .subjectId(subject.getId())
+                                .marksObtained(marks[i])
+                                .totalMarks(100.0)
+                                .examType(types[i])
+                                .term(Term.TERM_1)
+                                .academicYear(2026)
+                                .uploadedBy(1L)
+                                .build());
+                        count++;
+                    }
+                }
+            }
+            log.info("[SEEDER] Multi-subject data seeded — {} records loaded",
+                    count);
+
+        } catch (Exception ex) {
+            log.error("[SEEDER] Failed to seed multi-subject data: {}",
+                    ex.getMessage());
+        }
+    }
+
+    private Subject getOrCreateSubject(
+            String code, String name, String className) {
+        return subjectRepository.findBySubjectCode(code)
+                .orElseGet(() -> subjectRepository.save(Subject.builder()
+                        .subjectCode(code)
+                        .subjectName(name)
+                        .className(className)
+                        .isActive(true)
+                        .build()));
     }
 }

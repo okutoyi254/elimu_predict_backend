@@ -1,6 +1,7 @@
 package com.elimupredict.ai;
 
 import com.elimupredict.ai.dto.AnalysisResponse;
+import com.elimupredict.ai.dto.SmartClassInsightDTO;
 import com.elimupredict.common.ApiVersion;
 import com.elimupredict.common.enums.Term;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import java.util.Map;
 public class AiController {
 
     private final AiAnalysisService aiAnalysisService;
+    private final SmartClassAnalysisService smartAnalysisService;
 
     // ── Trigger analysis for one student ──
     @PostMapping("/analyze/student/{admissionNumber}")
@@ -58,5 +60,18 @@ public class AiController {
             @PathVariable String admissionNumber) {
         return ResponseEntity.ok(
                 aiAnalysisService.getAllStudentResults(admissionNumber));
+    }
+
+    @GetMapping("/smart-insight/{className}")
+    @PreAuthorize("hasAnyRole('TEACHER','SENIOR_TEACHER','PRINCIPAL'," +
+            "'DEPUTY_PRINCIPAL','ADMIN')")
+    public ResponseEntity<SmartClassInsightDTO> getSmartClassInsight(
+            @PathVariable String className,
+            @RequestParam Term term,
+            @RequestParam Integer academicYear) {
+
+        return ResponseEntity.ok(
+                smartAnalysisService.getSmartClassInsight(
+                        className, term, academicYear));
     }
 }
