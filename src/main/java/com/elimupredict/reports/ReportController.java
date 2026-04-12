@@ -125,4 +125,17 @@ public class ReportController {
                 dashboardService.getParentDashboard(
                         parent.getId(), term, academicYear));
     }
+
+
+    @GetMapping("/reports/student/{admissionNumber}/timeline")
+    @PreAuthorize("hasAnyRole('TEACHER','SENIOR_TEACHER','PRINCIPAL'," +
+            "'DEPUTY_PRINCIPAL','PARENT','ADMIN')")
+    public ResponseEntity<ProgressTimeLineDTO> getProgressTimeline(
+            @PathVariable String admissionNumber) {
+
+        var student= studentService.findOrThrow(admissionNumber);
+
+        return ResponseEntity.ok(
+                reportService.getProgressTimeLine(admissionNumber));
+    }
 }
