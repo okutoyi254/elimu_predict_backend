@@ -226,6 +226,56 @@ public class SmartClassAnalysisService {
                 .toList();
     }
 
+//    Students at risk in multiple subjects
+    private List<SmartClassInsightDTO.MultiSubjectRiskDTO> findMultiSubjectRiskStudents(
+            List<String> admNos, List<AiAnalysis> allAnalysis) {
+
+        return admNos.stream().map(
+                admNo -> {
+                    List<AiAnalysis> studentAnalyses = allAnalysis.stream()
+                            .filter(a -> a.getAdmissionNumber().equals(admNo))
+                            .toList();
+
+                    List<String> highRiskSubjects = studentAnalyses.stream()
+                            .filter(a -> "HIGH".equals(a.getRiskLevel()))
+                            .map(a -> {
+                                try {
+                                    return subjectService.getById(a.getSubjectId())
+                                            .getSubjectName();
+                                } catch (Exception e) { return "Unknown"; }
+                            })
+                            .toList();
+
+                    List<String> medRiskSubjects = studentAnalyses.stream()
+                            .filter(a -> "MEDIUM".equals(a.getRiskLevel()))
+                            .map(a -> {
+                                try {
+                                    return subjectService.getById(a.getSubjectId())
+                                            .getSubjectName();
+                                } catch (Exception e) { return "Unknown"; }
+                            })
+                            .toList();
+
+                    int atRiskCount = highRiskSubjects.size() + medRiskSubjects.size();
+
+                    return SmartClassInsightDTO.MultiSubjectRiskDTO.builder()
+                            .admissionNumber(admNo)
+                            .fullName(studentService.findOrThrow(admNo).getFullName())
+                            .highRiskSubjects(highRiskSubjects)
+                            .mediumRiskSubjects(medRiskSubjects)
+                            .totalAtRiskSubjects(atRiskCount)
+                            .overallUrgency(
+                                    highRiskSubjects.size() >= 3 ? "CRITICAL" :
+                                            highRiskSubjects.size() >= 2 ? "HIGH" :
+                                                    atRiskCount >= 3 ? "MEDIUM" : "LOW")
+                            .build();
+                })
+                .filter(m -> m.getTotalAtRiskSubjects() >= 2) // at risk in 2+ subjects
+                .sorted(Comparator.comparingInt(
+                                SmartClassInsightDTO.MultiSubjectRiskDTO::getTotalAtRiskSubjects)
+                        .reversed())
+                .toList();
+    }
 
 //    Standard deviation calculation
     private double calculateStdDev(List<AiAnalysis> analyses){
