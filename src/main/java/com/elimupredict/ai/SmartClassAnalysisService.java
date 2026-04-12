@@ -178,7 +178,56 @@ public class SmartClassAnalysisService {
                 .build();
     }
 
+//    Students strong in some subjects but weak in others
+    private List<SmartClassInsightDTO.MixedPerformerDTO> findMixedPerformers(
+            List<String> admNos, List<AiAnalysis> allAnalysis) {
 
+        return admNos.stream().map(
+                admNo ->{
+                    List<AiAnalysis> studentAnalyses= allAnalysis.stream()
+.filter(a -> a.getAdmissionNumber().equals(admNo
+        )).toList();
+
+                    List<String> strongSubjects = studentAnalyses.stream()
+                            .filter(a -> "LOW".equalsIgnoreCase(a.getRiskLevel()))
+                            .map(
+                                    a -> {
+                                        try {
+                                            return subjectService.getById(a.getSubjectId()).getSubjectName();
+                                        } catch (Exception e) {
+                                            return "Unknown Subject";
+                                        }
+                                    } )
+                            .toList();
+
+                    List<String> weakSubjects = studentAnalyses.stream()
+                            .filter(a -> "HIGH".equalsIgnoreCase(a.getRiskLevel()))
+                            .map(
+                                    a -> {
+                                        try {
+                                            return subjectService.getById(a.getSubjectId()).getSubjectName();
+                                        } catch (Exception e) {
+                                            return "Unknown Subject";
+                                        }
+                                    } )
+                            .toList();
+
+                    return SmartClassInsightDTO.MixedPerformerDTO.builder()
+                            .admissionNumber(admNo)
+                            .fullName(studentService.findOrThrow(admNo).getFullName())
+                            .strongSubjects(strongSubjects)
+                            .weakSubjects(weakSubjects)
+                            .isMixedPerformer(!strongSubjects.isEmpty() && !weakSubjects.isEmpty())
+                            .insight("Strong in " + String.join(", ", strongSubjects) +
+                                    " but needs support in " +
+                                    String.join(", ", weakSubjects))
+                            .build();
+    }).filter(SmartClassInsightDTO.MixedPerformerDTO::getIsMixedPerformer)
+                .toList();
+    }
+
+
+//    Standard deviation calculation
     private double calculateStdDev(List<AiAnalysis> analyses){
 
         double avg = analyses.stream()
