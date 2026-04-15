@@ -65,7 +65,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*"));
+
+        config.setAllowedOrigins(List.of(
+                "http://localhost:3000",      // React dev server
+                "http://localhost:5173",      // Vite dev server
+                "http://localhost:4173",      // Vite preview
+                "https://elimu-predict-backend.onrender.com"
+        ));
+
         config.setAllowedMethods(
                 List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
