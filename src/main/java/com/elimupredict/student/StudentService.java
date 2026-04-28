@@ -72,4 +72,13 @@ public class StudentService {
                 .createdAt(student.getCreatedAt())
                 .build();
     }
+
+    public List<String> getAvailableClasses() {
+        return studentRepository.findAll()
+                .stream()
+                .map(Student::getClassName)
+                .distinct()
+                .sorted()
+                .toList();
+    }
 }

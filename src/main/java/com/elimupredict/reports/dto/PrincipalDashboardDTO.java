@@ -27,7 +27,7 @@ public class PrincipalDashboardDTO {
 
     private List<SubjectRankDTO> subjectRankings;
 
-    private MostImprovedDTO mostImprovedClasses;
+    private MostImprovedDTO mostImprovedClass;
 
     @Data @Builder
     public static class ClassGraphDTO {
@@ -38,6 +38,8 @@ public class PrincipalDashboardDTO {
         private String classGrade;
         private String classStatus;
         private Integer classRank;
+        private Double previousTermMean;
+
 
         private List<GraphPointDTO> graphPoints;
 
