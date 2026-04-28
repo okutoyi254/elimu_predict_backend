@@ -106,7 +106,8 @@ public class DashboardService {
                 .highRiskCount(highCount)
                 .mediumRiskCount(medCount)
                 .build();
-    }// ── Senior Teacher dashboard ──
+    }
+    // ── Senior Teacher dashboard ──
     public SeniorDashboardDTO getSeniorDashboard(
             String userId, String className,
             Term term, Integer academicYear) {

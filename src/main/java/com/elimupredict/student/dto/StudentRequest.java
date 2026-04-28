@@ -16,7 +16,6 @@ public class StudentRequest {
     @NotBlank(message = "Class name is required")
     private String className;
 
-    private Long parentId;
 
     @NotNull(message = "Enrollment year is required")
     private Integer enrollmentYear;

@@ -1,6 +1,7 @@
 package com.elimupredict.user;
 
 import com.elimupredict.common.enums.Role;
+import com.elimupredict.student.Student;
 import com.elimupredict.student.StudentRepository;
 import com.elimupredict.user.dto.RegisterRequest;
 import com.elimupredict.user.dto.UserResponse;
@@ -49,7 +50,7 @@ public class UserService {
         && !request.getAdmissionNumbers().isEmpty()){
             for (String admissionNumber : request.getAdmissionNumbers()) {
                 try {
-                    linkParentToStudent(saved.getId(), admissionNumber);
+                    linkParentToStudent(saved.getUsername(), admissionNumber);
                 } catch (Exception e) {
                     log.warn("[USER SERVICE] Could not link student {} to parent {} — {}",
                             admissionNumber, saved.getUsername(), e.getMessage());
@@ -66,29 +67,37 @@ public class UserService {
     }
 
 //    Link Parent to student
-    @Transactional
-    public UserResponse linkParentToStudent(Long parentId, String admissionNumber){
+@Transactional
+public UserResponse linkParentToStudent(
+        String parentUserId, String admissionNumber) {
 
-        User parent = userRepository.findById(parentId)
-                .orElseThrow(()-> new RuntimeException("Parent not found: "+parentId));
+    User parent = userRepository.findByUsername(parentUserId)
+            .orElseThrow(() -> new RuntimeException(
+                    "Parent not found with userId: " + parentUserId));
 
-        if(parent.getRole() != Role.PARENT){
-            throw new RuntimeException(" User "+parent.getUsername()+" is not a PARENT");
-        }
-
-        // Find student and link
-        var student = studentRepository.findByAdmissionNumber(admissionNumber)
-                .orElseThrow(() -> new RuntimeException(
-                        "Student not found: " + admissionNumber));
-
-        student.setParentId(parentId);
-        studentRepository.save(student);
-
-        log.info("[USER SERVICE] Parent {} linked to student {}",
-                parent.getUsername(), admissionNumber);
-
-        return toResponse(parent);
+    if (parent.getRole() != Role.PARENT) {
+        throw new RuntimeException(
+                parentUserId + " is not a PARENT account");
     }
+
+    Student student = studentRepository.findByAdmissionNumber(admissionNumber)
+            .orElseThrow(() -> new RuntimeException(
+                    "Student not found: " + admissionNumber));
+
+    // 🚨 Prevent double-linking
+    if (student.getParentId() != null) {
+        throw new RuntimeException(
+                "Student " + admissionNumber + " is already linked to a parent");
+    }
+
+    student.setParentId(parent.getId());
+    studentRepository.save(student);
+
+    log.info("[USER SERVICE] Parent {} linked to student {}",
+            parentUserId, admissionNumber);
+
+    return toResponse(parent);
+}
 
 
 

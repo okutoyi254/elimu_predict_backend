@@ -21,7 +21,6 @@ public class StudentService {
                 .admissionNumber(request.getAdmissionNumber())
                 .fullName(request.getFullName())
                 .className(request.getClassName())
-                .parentId(request.getParentId())
                 .enrollmentYear(request.getEnrollmentYear())
                 .isActive(true)
                 .build();
@@ -49,7 +48,6 @@ public class StudentService {
 
         student.setFullName(request.getFullName());
         student.setClassName(request.getClassName());
-        student.setParentId(request.getParentId());
         student.setEnrollmentYear(request.getEnrollmentYear());
 
         return toReponse(studentRepository.save(student));
@@ -69,10 +67,18 @@ public class StudentService {
                 .admissionNumber(student.getAdmissionNumber())
                 .fullName(student.getFullName())
                 .className(student.getClassName())
-                .parentId(student.getParentId())
                 .enrollmentYear(student.getEnrollmentYear())
                 .isActive(student.getIsActive())
                 .createdAt(student.getCreatedAt())
                 .build();
+    }
+
+    public List<String> getAvailableClasses() {
+        return studentRepository.findAll()
+                .stream()
+                .map(Student::getClassName)
+                .distinct()
+                .sorted()
+                .toList();
     }
 }
