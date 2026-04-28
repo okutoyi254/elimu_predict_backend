@@ -1,11 +1,15 @@
 package com.elimupredict.reports;
 
 import com.elimupredict.ai.AIAnalysisRepository;
+import com.elimupredict.ai.AiAnalysis;
 import com.elimupredict.common.enums.Term;
+import com.elimupredict.marks.StudentRecord;
 import com.elimupredict.marks.StudentRecordRepository;
 import com.elimupredict.reports.dto.PrincipalDashboardDTO;
+import com.elimupredict.reports.dto.SchoolAnalysisDTO;
 import com.elimupredict.student.StudentService;
 import com.elimupredict.student.dto.StudentResponse;
+import com.elimupredict.subject.Subject;
 import com.elimupredict.subject.SubjectRepository;
 import com.elimupredict.subject.SubjectService;
 import lombok.RequiredArgsConstructor;
@@ -200,5 +204,96 @@ public class PrincipalReportService {
 
     }
 
+public SchoolAnalysisDTO getSchoolAnalysis(
+        Term term,Integer academicYear
+) {
+
+    List<String> allClasses = studentService.getAvailableClasses();
+
+//        Build prompt summary
+    StringBuilder summary = new StringBuilder();
+    summary.append(String.format("School Performance Summary -%s %d\n\n",
+            term.name().replace("_", " "), academicYear
+    ));
+
+    // Class performance
+    summary.append("CLASS PERFORMANCE:\n");
+    for (String className : allClasses) {
+        List<String> admNos = studentService
+                .getStudentsByClassName(className)
+                .stream()
+                .map(StudentResponse::getAdmissionNumber)
+                .toList();
+
+        double mean = calculateClassMean(admNos, term, academicYear);
+
+        List<AiAnalysis> analyses = analysisRepository
+                .findByStudentsAndTerm(admNos, term, academicYear);
+
+        long high = analyses.stream()
+                .filter(a -> "HIGH".equals(a.getRiskLevel())).count();
+
+        summary.append(String.format(
+                "- %s: Mean=%.1f, High Risk Students=%d/%d\n",
+                className, mean, high, admNos.size()));
+    }
+
+    // Subject performance
+    summary.append("\nSUBJECT PERFORMANCE (school-wide):\n");
+    List<Subject> subjects = subjectRepository.findAll();
+
+    for (Subject subject : subjects) {
+        double subjectMean = allClasses.stream()
+                .flatMap(c -> studentService
+                        .getStudentsByClassName(c).stream()
+                        .map(StudentResponse::getAdmissionNumber))
+                .mapToDouble(admNo ->
+                        recordRepository
+                                .findByAdmissionNumberAndSubjectId(
+                                        admNo, subject.getId())
+                                .stream()
+                                .filter(r -> r.getTerm() == term
+                                        && r.getAcademicYear().equals(academicYear))
+                                .mapToDouble(StudentRecord::getMarksObtained)
+                                .average().orElse(0.0))
+                .filter(m -> m > 0)
+                .average().orElse(0.0);
+
+        if (subjectMean > 0) {
+            summary.append(String.format(
+                    "- %s: School Mean=%.1f\n",
+                    subject.getSubjectName(), subjectMean));
+        }
+    }
+
+    // Build Gemini prompt
+    String prompt = String.format(
+            "You are an educational analyst. Analyze this school's " +
+                    "performance data and provide:\n" +
+                    "1. A 3-sentence overall analysis of school performance\n" +
+                    "2. Top 3 areas needing urgent attention with specific " +
+                    "recommendations\n" +
+                    "3. Top 2 areas performing well\n" +
+                    "4. A prioritized action plan with 5 specific steps\n" +
+                    "5. Direct recommendation to the principal\n\n" +
+                    "Format your response as JSON with these keys:\n" +
+                    "overallAnalysis, areasNeedingAttention (array of " +
+                    "{area, reason, priority, recommendation}), " +
+                    "areasPerformingWell (array of {area, reason}), " +
+                    "actionPlan (array of {priority, action, targetClass, " +
+                    "targetSubject, expectedOutcome}), " +
+                    "principalRecommendation\n\n" +
+                    "Data:\n%s", summary.toString());
+
+    try {
+        String geminiResponse = callGemini(prompt);
+        return parseGeminiAnalysis(geminiResponse, term, academicYear);
+    } catch (Exception e) {
+        log.error("[PRINCIPAL ANALYSIS] Gemini failed: {}", e.getMessage());
+        return buildFallbackAnalysis(term, academicYear, allClasses);
+    }
+}
+
 
 }
+
