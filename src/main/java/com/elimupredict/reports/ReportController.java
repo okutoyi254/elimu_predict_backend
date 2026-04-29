@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 public class ReportController {
 
     private final ReportService reportService;
-    private final DashboardService dashboardService;
+//    private final DashboardService dashboardService;
     private final UserRepository userRepository;
     private final StudentService studentService;
 
@@ -26,14 +26,14 @@ public class ReportController {
     @GetMapping("/dashboard/parent/child/{admissionNumber}")
     @PreAuthorize("hasRole('PARENT')")
     public ResponseEntity<StudentReportDTO> getChildReport(
-            @AuthenticationPrincipal String userId,   // from JWT — not URL
+            @AuthenticationPrincipal String username,   // from JWT — not URL
             @PathVariable String admissionNumber,
             @RequestParam Term term,
             @RequestParam Integer academicYear) {
 
-        User parent = userRepository.findByUsername(userId)
+        User parent = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException(
-                        "Parent not found: " + userId));
+                        "Parent not found: " + username));
 
         // Verify this child actually belongs to this parent
         boolean isParentsChild = studentService
@@ -74,57 +74,57 @@ public class ReportController {
                 reportService.getSchoolOverview(term, academicYear));
     }
 
-    @GetMapping("/dashboard/teacher")
-    @PreAuthorize("hasRole('TEACHER')")
-    public ResponseEntity<TeacherDashboardDTO> getTeacherDashboard(
-            @AuthenticationPrincipal String userId,
-            @RequestParam String className,       // ← selected from dropdown
-            @RequestParam Long subjectId,         // ← selected from dropdown
-            @RequestParam Term term,
-            @RequestParam Integer academicYear) {
-        return ResponseEntity.ok(
-                dashboardService.getTeacherDashboard(
-                        userId, className, subjectId, term, academicYear));
-    }
+//    @GetMapping("/dashboard/teacher")
+//    @PreAuthorize("hasRole('TEACHER')")
+//    public ResponseEntity<TeacherDashboardDTO> getTeacherDashboard(
+//            @AuthenticationPrincipal String userId,
+//            @RequestParam String className,       // ← selected from dropdown
+//            @RequestParam Long subjectId,         // ← selected from dropdown
+//            @RequestParam Term term,
+//            @RequestParam Integer academicYear) {
+//        return ResponseEntity.ok(
+//                dashboardService.getTeacherDashboard(
+//                        userId, className, subjectId, term, academicYear));
+//    }
+//
+//    // ── Senior teacher dashboard ──
+//    @GetMapping("/dashboard/senior")
+//    @PreAuthorize("hasRole('SENIOR_TEACHER')")
+//    public ResponseEntity<SeniorDashboardDTO> getSeniorDashboard(
+//            @AuthenticationPrincipal String userId,
+//            @RequestParam String className,
+//            @RequestParam Term term,
+//            @RequestParam Integer academicYear) {
+//        return ResponseEntity.ok(
+//                dashboardService.getSeniorDashboard(userId,className, term, academicYear));
+//    }
 
-    // ── Senior teacher dashboard ──
-    @GetMapping("/dashboard/senior")
-    @PreAuthorize("hasRole('SENIOR_TEACHER')")
-    public ResponseEntity<SeniorDashboardDTO> getSeniorDashboard(
-            @AuthenticationPrincipal String userId,
-            @RequestParam String className,
-            @RequestParam Term term,
-            @RequestParam Integer academicYear) {
-        return ResponseEntity.ok(
-                dashboardService.getSeniorDashboard(userId,className, term, academicYear));
-    }
-
-    // ── Principal / Deputy dashboard ──
-    @GetMapping("/dashboard/principal")
-    @PreAuthorize("hasAnyRole('PRINCIPAL','DEPUTY_PRINCIPAL')")
-    public ResponseEntity<SchoolOverviewDTO> getPrincipalDashboard(
-            @RequestParam Term term,
-            @RequestParam Integer academicYear) {
-        return ResponseEntity.ok(
-                reportService.getSchoolOverview(term, academicYear));
-    }
-
-    // ── Parent dashboard ──
-    @GetMapping("/dashboard/parent")
-    @PreAuthorize("hasRole('PARENT')")
-    public ResponseEntity<ParentDashboardDTO> getParentDashboard(
-            @AuthenticationPrincipal String userId,   // from JWT token
-            @RequestParam Term term,
-            @RequestParam Integer academicYear) {
-
-        User parent = userRepository.findByUsername(userId)
-                .orElseThrow(() -> new RuntimeException(
-                        "Parent not found: " + userId));
-
-        return ResponseEntity.ok(
-                dashboardService.getParentDashboard(
-                        parent.getId(), term, academicYear));
-    }
+//    // ── Principal / Deputy dashboard ──
+//    @GetMapping("/dashboard/principal")
+//    @PreAuthorize("hasAnyRole('PRINCIPAL','DEPUTY_PRINCIPAL')")
+//    public ResponseEntity<SchoolOverviewDTO> getPrincipalDashboard(
+//            @RequestParam Term term,
+//            @RequestParam Integer academicYear) {
+//        return ResponseEntity.ok(
+//                reportService.getSchoolOverview(term, academicYear));
+//    }
+//
+//    // ── Parent dashboard ──
+//    @GetMapping("/dashboard/parent")
+//    @PreAuthorize("hasRole('PARENT')")
+//    public ResponseEntity<ParentDashboardDTO> getParentDashboard(
+//            @AuthenticationPrincipal String userId,   // from JWT token
+//            @RequestParam Term term,
+//            @RequestParam Integer academicYear) {
+//
+//        User parent = userRepository.findByUsername(userId)
+//                .orElseThrow(() -> new RuntimeException(
+//                        "Parent not found: " + userId));
+//
+//        return ResponseEntity.ok(
+//                dashboardService.getParentDashboard(
+//                        parent.getId(), term, academicYear));
+//    }
 
 
     @GetMapping("/reports/student/{admissionNumber}/timeline")
