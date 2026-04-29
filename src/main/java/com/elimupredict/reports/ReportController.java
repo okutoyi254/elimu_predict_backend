@@ -22,35 +22,35 @@ public class ReportController {
     private final UserRepository userRepository;
     private final StudentService studentService;
 
-    // ── Student report ──
-    @GetMapping("/dashboard/parent/child/{admissionNumber}")
-    @PreAuthorize("hasRole('PARENT')")
-    public ResponseEntity<StudentReportDTO> getChildReport(
-            @AuthenticationPrincipal String username,   // from JWT — not URL
-            @PathVariable String admissionNumber,
-            @RequestParam Term term,
-            @RequestParam Integer academicYear) {
-
-        User parent = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException(
-                        "Parent not found: " + username));
-
-        // Verify this child actually belongs to this parent
-        boolean isParentsChild = studentService
-                .getByParentId(parent.getId())
-                .stream()
-                .anyMatch(s -> s.getAdmissionNumber().equals(admissionNumber));
-
-        if (!isParentsChild) {
-            throw new RuntimeException(
-                    "Student " + admissionNumber +
-                            " is not linked to your account.");
-        }
-
-        return ResponseEntity.ok(
-                reportService.getStudentReport(
-                        admissionNumber, term, academicYear));
-    }
+//    // ── Student report ──
+//    @GetMapping("/dashboard/parent/child/{admissionNumber}")
+//    @PreAuthorize("hasRole('PARENT')")
+//    public ResponseEntity<StudentReportDTO> getChildReport(
+//            @AuthenticationPrincipal String username,   // from JWT — not URL
+//            @PathVariable String admissionNumber,
+//            @RequestParam Term term,
+//            @RequestParam Integer academicYear) {
+//
+//        User parent = userRepository.findByUsername(username)
+//                .orElseThrow(() -> new RuntimeException(
+//                        "Parent not found: " + username));
+//
+//        // Verify this child actually belongs to this parent
+//        boolean isParentsChild = studentService
+//                .getByParentId(parent.getId())
+//                .stream()
+//                .anyMatch(s -> s.getAdmissionNumber().equals(admissionNumber));
+//
+//        if (!isParentsChild) {
+//            throw new RuntimeException(
+//                    "Student " + admissionNumber +
+//                            " is not linked to your account.");
+//        }
+//
+//        return ResponseEntity.ok(
+//                reportService.getStudentReport(
+//                        admissionNumber, term, academicYear));
+//    }
 
     // ── Class report ──
     @GetMapping("/reports/class/{className}")

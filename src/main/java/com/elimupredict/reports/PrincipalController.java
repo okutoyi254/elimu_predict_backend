@@ -1,5 +1,6 @@
 package com.elimupredict.reports;
 
+import com.elimupredict.common.ApiVersion;
 import com.elimupredict.common.enums.Term;
 import com.elimupredict.reports.dto.PrincipalDashboardDTO;
 import com.elimupredict.reports.dto.SchoolAnalysisDTO;
@@ -9,7 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/principal")
+@RequestMapping(ApiVersion.V1+"/principal")
 @RequiredArgsConstructor
 public class PrincipalController {
 

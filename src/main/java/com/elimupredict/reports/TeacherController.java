@@ -2,6 +2,7 @@ package com.elimupredict.reports;
 
 
 
+import com.elimupredict.common.ApiVersion;
 import com.elimupredict.common.enums.Term;
 import com.elimupredict.reports.dto.TeacherProfileDTO;
 import lombok.RequiredArgsConstructor;
@@ -11,8 +12,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/teacher")
 @RequiredArgsConstructor
+@RequestMapping(ApiVersion.V1+"/teacher")
+
 public class TeacherController {
 
     private final TeacherReportService teacherReportService;
