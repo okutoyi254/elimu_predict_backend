@@ -15,6 +15,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(ApiVersion.V1+"/parent")
+
 public class ParentController {
 
     private final ParentReportService parentReportService;
