@@ -56,13 +56,14 @@ public class UserController {
     }
 
 
-    @PutMapping("/{parentId}/link-student/{admissionNumber}")
+
+    @PutMapping("/{parentUserId}/link-student/{admissionNumber}")
     @PreAuthorize("hasAnyRole('ADMIN', 'IT_HANDLER')")
     public ResponseEntity<UserResponse> linkParentToStudent(
-            @PathVariable Long parentId,
+            @PathVariable String username,          // ← "PAR010" not 5
             @PathVariable String admissionNumber) {
-        return ResponseEntity.ok( userService.linkParentToStudent(parentId,admissionNumber)
-        );
+        return ResponseEntity.ok(
+                userService.linkParentToStudent(username, admissionNumber));
     }
 
 
