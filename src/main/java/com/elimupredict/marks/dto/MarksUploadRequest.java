@@ -14,8 +14,8 @@ public class MarksUploadRequest {
     @NotBlank(message = "Admission number is required")
     private String admissionNumber;
 
-    @NotNull(message = "Subject ID is required")
-    private Long subjectId;
+    @NotNull(message = "Subject code is required")
+    private String subjectCode;
 
     @NotNull
     @DecimalMin(value = "0.0") @DecimalMax(value = "100.0")

@@ -5,6 +5,7 @@ import com.elimupredict.marks.dto.BulkMarksUploadRequest;
 import com.elimupredict.marks.dto.MarksUploadRequest;
 import com.elimupredict.student.Student;
 import com.elimupredict.student.StudentService;
+import com.elimupredict.subject.Subject;
 import com.elimupredict.subject.SubjectService;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -23,18 +24,19 @@ public class MarksService {
 
     public StudentRecord uploadMarks(MarksUploadRequest request,Long uploadedBy){
 
+
 //        Validate student exists
         studentService.findOrThrow(request.getAdmissionNumber());
 
 //        Validate subject exists
-        subjectService.getById(request.getSubjectId());
+        Subject subject = subjectService.getBySubjectCode(request.getSubjectCode());
 
 //        Block future term entry
         validateNotFutureTerm(request.getTerm(),request.getAcademicYear());
 
 //        Block duplicate entry
         if(recordRepository.existsByAdmissionNumberAndSubjectIdAndExamTypeAndTermAndAcademicYear(
-                request.getAdmissionNumber(),request.getSubjectId(),request.getExamType(),request.getTerm(),request.getAcademicYear()
+                request.getAdmissionNumber(),subject.getId(),request.getExamType(),request.getTerm(),request.getAcademicYear()
         )){
             throw  new RuntimeException(
                     "Mark already exists for this student,subject, exam and term.Use update instead"
@@ -43,7 +45,7 @@ public class MarksService {
 
         StudentRecord record = StudentRecord.builder()
                 .admissionNumber(request.getAdmissionNumber())
-                .subjectId(request.getSubjectId())
+                .subjectId(subject.getId())
                 .marksObtained(request.getMarksObtained())
                 .totalMarks(100.0)
                 .examType(request.getExamType())

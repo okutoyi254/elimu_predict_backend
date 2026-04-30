@@ -22,7 +22,6 @@ public class Subject {
     @Column(nullable = false)
     private String subjectName;
 
-    private Long teacherId;
 
     @Column(nullable = false)
     private Boolean isActive = true;

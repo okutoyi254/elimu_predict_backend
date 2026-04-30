@@ -20,7 +20,6 @@ public class SubjectService {
         Subject subject = Subject.builder()
                 .subjectCode(request.getSubjectCode())
                 .subjectName(request.getSubjectName())
-                .teacherId(request.getTeacherId())
                 .className(request.getClassName())
                 .isActive(true)
                 .build();
@@ -41,5 +40,10 @@ public class SubjectService {
     }
     public List<Subject> getByTeacher(Long teacherId) {
         return subjectRepository.findByTeacherId(teacherId);
+    }
+
+    public Subject getBySubjectCode(String subjectCode) {
+        return subjectRepository.findBySubjectCode(subjectCode)
+                .orElseThrow(() -> new RuntimeException("Subject with the given code doesn't exist " + subjectCode));
     }
 }

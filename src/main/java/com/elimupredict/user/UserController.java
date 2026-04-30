@@ -57,7 +57,7 @@ public class UserController {
 
 
 
-    @PutMapping("/{parentUserId}/link-student/{admissionNumber}")
+    @PutMapping("/{username}/link-student/{admissionNumber}")
     @PreAuthorize("hasAnyRole('ADMIN', 'IT_HANDLER')")
     public ResponseEntity<UserResponse> linkParentToStudent(
             @PathVariable String username,          // ← "PAR010" not 5

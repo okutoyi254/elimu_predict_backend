@@ -21,30 +21,32 @@ public class TeacherAssignmentService {
     private final SubjectRepository subjectRepository;
     private final UserRepository userRepository;
 
+
     // ── Assign teacher to subject + class ──
     @Transactional
     public AssignmentResponse assignTeacher(
             AssignmentRequest request, String assignedBy) {
 
-        // Validate teacher exists and has TEACHER role
-        User teacher = userRepository.findById(request.getTeacherId())
+        Subject subject = subjectRepository.findBySubjectCode(request.getSubjectCode())
                 .orElseThrow(() -> new RuntimeException(
-                        "Teacher not found: " + request.getTeacherId()));
+                        "Subject not found with code: " + request.getSubjectCode()));
+
+        User teacher = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException(
+                        "Teacher not found with username: " + request.getUsername()));
+
+
 
         if (teacher.getRole() != Role.TEACHER) {
             throw new RuntimeException(
                     teacher.getUsername() + " is not a TEACHER");
         }
 
-        // Validate subject exists
-        Subject subject = subjectRepository.findById(request.getSubjectId())
-                .orElseThrow(() -> new RuntimeException(
-                        "Subject not found: " + request.getSubjectId()));
+
 
         // Check duplicate assignment
         if (assignmentRepository.existsByTeacherIdAndSubjectIdAndClassName(
-                request.getTeacherId(),
-                request.getSubjectId(),
+                teacher.getId(), subject.getId(),
                 request.getClassName())) {
             throw new RuntimeException(
                     teacher.getFullName() + " is already assigned to " +
@@ -52,8 +54,8 @@ public class TeacherAssignmentService {
         }
 
         TeacherAssignment assignment = TeacherAssignment.builder()
-                .teacherId(request.getTeacherId())
-                .subjectId(request.getSubjectId())
+                .teacherId(teacher.getId())
+                .subjectId(subject.getId())
                 .className(request.getClassName())
                 .isActive(true)
                 .assignedBy(assignedBy)
@@ -157,7 +159,6 @@ public class TeacherAssignmentService {
                 .toList();
 
         return TeacherClassSubjectDTO.builder()
-                .teacherUserId(userId)
                 .teacherName(teacher.getFullName())
                 .availableClasses(availableClasses)
                 .classSubjects(classSubjects)
@@ -181,16 +182,11 @@ public class TeacherAssignmentService {
     private AssignmentResponse toResponse(
             TeacherAssignment a, User teacher, Subject subject) {
         return AssignmentResponse.builder()
-                .id(a.getId())
-                .teacherId(a.getTeacherId())
                 .teacherName(teacher.getFullName())
-                .teacherUserId(teacher.getUsername())
-                .subjectId(a.getSubjectId())
                 .subjectName(subject.getSubjectName())
                 .className(a.getClassName())
                 .isActive(a.getIsActive())
                 .assignedAt(a.getAssignedAt())
-                .assignedBy(a.getAssignedBy())
                 .build();
     }
 }

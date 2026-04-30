@@ -7,7 +7,7 @@ import java.util.List;
 @Data
 @Builder
 public class TeacherClassSubjectDTO {
-    private String teacherUserId;
+    private String teacherUsername;
     private String teacherName;
 
     private List<String> availableClasses;
