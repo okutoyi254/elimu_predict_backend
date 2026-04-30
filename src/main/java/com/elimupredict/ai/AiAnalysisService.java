@@ -28,7 +28,6 @@ public class AiAnalysisService {
     private final StudentRecordRepository recordRepository;
     private final AIAnalysisRepository analysisRepository;
     private final MlService mlService;
-    private final GeminiService geminiService;
     private final StudentService studentService;
     private final SubjectService subjectService;
 
@@ -118,12 +117,10 @@ public class AiAnalysisService {
 
         return classResults;
     }
-    // ── Core pipeline for one student + one subject ──
     private AnalysisResponse runAnalysis(
             String admissionNumber, Long subjectId, String subjectName,
             List<StudentRecord> records, Term term, Integer academicYear) {
 
-        // Sort records by exam type order
         records.sort(Comparator.comparing(r -> r.getExamType().ordinal()));
 
         List<Double> marks = records.stream()
@@ -156,32 +153,8 @@ public class AiAnalysisService {
             status = "FAILED";
         }
 
-        // ── Step 2: Call Gemini only if risk >= 40% ──
-// ── Step 2: Call Gemini only if risk >= 40% AND no suggestion yet ──
-        AiAnalysis analysis = new AiAnalysis();
-        String suggestion = null;
-
-        if (mlResponse != null
-                && mlResponse.getRiskPercentage() != null
-                && mlResponse.getRiskPercentage() >= 40.0
-                && (analysis.getSuggestion() == null
-                || analysis.getSuggestion().isEmpty())) {
-            // ← don't regenerate
-            suggestion = geminiService.generateSuggestion(
-                    subjectName, mlResponse.getRiskPercentage(), marks);
-
-//            -----Set Analysis
-            analysis.setRiskPercentage(mlResponse.getRiskPercentage());
-            analysis.setRiskLevel(mlResponse.getRiskLevel());
-            analysis.setWeaknessGroup(mlResponse.getWeaknessGroup());
-            analysis.setTrend(mlResponse.getTrend());
-
-        } else if (analysis.getSuggestion() != null) {
-            suggestion = analysis.getSuggestion();  // reuse existing
-        }
-
-        // ── Step 3: Save or update analysis record ──
-        analysis = analysisRepository
+        //Step 2: Fetch existing or create new record
+        AiAnalysis analysis = analysisRepository
                 .findByAdmissionNumberAndSubjectIdAndTermAndAcademicYear(
                         admissionNumber, subjectId, term, academicYear)
                 .orElse(AiAnalysis.builder()
@@ -191,31 +164,31 @@ public class AiAnalysisService {
                         .academicYear(academicYear)
                         .build());
 
+        // Step 3: Update ML results and save
         if (mlResponse != null) {
             analysis.setRiskPercentage(mlResponse.getRiskPercentage());
             analysis.setRiskLevel(mlResponse.getRiskLevel());
             analysis.setWeaknessGroup(mlResponse.getWeaknessGroup());
+            analysis.setTrend(mlResponse.getTrend());
         }
-        analysis.setSuggestion(suggestion);
         analysis.setAnalysisStatus(status);
 
         analysisRepository.save(analysis);
 
-        // ── Step 4: Return response ──
+        //Step 4: Return response
         return AnalysisResponse.builder()
                 .admissionNumber(admissionNumber)
                 .subjectName(subjectName)
                 .riskPercentage(mlResponse != null ? mlResponse.getRiskPercentage() : null)
                 .riskLevel(mlResponse != null ? mlResponse.getRiskLevel() : null)
-                .suggestion(suggestion)
                 .analysisStatus(status)
                 .term(term.name())
                 .academicYear(academicYear)
-                .trend(mlResponse !=null ? mlResponse.getTrend() : null)
+                .trend(mlResponse != null ? mlResponse.getTrend() : null)
                 .build();
     }
 
-    // ── Retrieve stored results ──
+    //  Retrieve stored results
     public List<AnalysisResponse> getStudentResults(
             String admissionNumber, Term term) {
 
