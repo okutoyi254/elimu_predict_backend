@@ -53,7 +53,7 @@ public class MarksService {
                 .examType(request.getExamType())
                 .term(request.getTerm())
                 .academicYear(request.getAcademicYear())
-//                .uploadedBy(uploadedBy)
+                .uploadedBy(uploadedBy)
                 .build();
 
         return recordRepository.save(record);
