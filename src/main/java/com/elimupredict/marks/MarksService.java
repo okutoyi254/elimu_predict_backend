@@ -6,6 +6,7 @@ import com.elimupredict.marks.dto.MarksUploadRequest;
 import com.elimupredict.student.Student;
 import com.elimupredict.student.StudentService;
 import com.elimupredict.subject.Subject;
+import com.elimupredict.subject.SubjectRepository;
 import com.elimupredict.subject.SubjectService;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ public class MarksService {
     private final StudentRecordRepository recordRepository;
     private final StudentService studentService;
     private final SubjectService subjectService;
+    private final SubjectRepository subjectRepository;
 
     public StudentRecord uploadMarks(MarksUploadRequest request,Long uploadedBy){
 
@@ -86,8 +88,11 @@ public class MarksService {
     }
 
     public List<StudentRecord> getClassRecords(
-            Long subjectId, Term term, Integer year) {
-        return recordRepository.findClassRecords(subjectId, term, year);
+            String subjectCode, Term term, Integer year) {
+
+        Subject subject = subjectRepository.findBySubjectCode(subjectCode)
+                .orElseThrow(() -> new RuntimeException("Subject not found: " + subjectCode));
+        return recordRepository.findClassRecords(subject.getId(), term, year);
     }
 
     private void validateNotFutureTerm(Term term,Integer academicYear){

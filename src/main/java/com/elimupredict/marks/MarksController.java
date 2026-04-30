@@ -23,9 +23,9 @@ public class MarksController {
     private final MarksService marksService;
     private final UserRepository userRepository;
 
-    private Long resolveName(String userName){
+    private Long resolveName(String username){
 
-        return userRepository.findByUsername(userName)
+        return userRepository.findByUsername(username)
                 .orElseThrow(()->new RuntimeException("Invalid username!"))
                 .getId();
     }
@@ -34,19 +34,19 @@ public class MarksController {
     @PreAuthorize(("hasRole('TEACHER')"))
     public ResponseEntity<StudentRecord>upload(
             @Valid @RequestBody MarksUploadRequest request,
-            @AuthenticationPrincipal String userName){
+            @AuthenticationPrincipal String username){
         return  ResponseEntity.status(HttpStatus.CREATED)
-                .body(marksService.uploadMarks(request,resolveName(userName)));
+                .body(marksService.uploadMarks(request,resolveName(username)));
     }
 
     @PostMapping("/bulk")
     @PreAuthorize("hasRole('TEACHER')")
     public ResponseEntity<List<StudentRecord>> bulkUpload(
             @Valid @RequestBody BulkMarksUploadRequest request
-            ,@AuthenticationPrincipal String userName
+            ,@AuthenticationPrincipal String username
             ){
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(marksService.bulkUpload(request,resolveName(userName)));
+                .body(marksService.bulkUpload(request,resolveName(username)));
     }
 
     @PutMapping("/{id}")
@@ -76,14 +76,14 @@ public class MarksController {
                 marksService.getByStudentAndTerm(admissionNumber, term));
     }
 
-    @GetMapping("/class/subject/{subjectId}/term/{term}/year/{year}")
+    @GetMapping("/class/subject/{subjectCode}/term/{term}/year/{year}")
     @PreAuthorize("hasAnyRole('TEACHER','SENIOR_TEACHER','PRINCIPAL')")
     public ResponseEntity<List<StudentRecord>> getClassRecords(
-            @PathVariable Long subjectId,
+            @PathVariable String subjectCode,
             @PathVariable Term term,
             @PathVariable Integer year) {
         return ResponseEntity.ok(
-                marksService.getClassRecords(subjectId, term, year));
+                marksService.getClassRecords(subjectCode, term, year));
     }
 }
 
