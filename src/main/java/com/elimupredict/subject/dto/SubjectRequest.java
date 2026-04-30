@@ -9,6 +9,5 @@ import lombok.Data;
 public class SubjectRequest {
     @NotBlank private String subjectCode;
     @NotBlank private String subjectName;
-    private Long teacherId;
     @NotBlank private String className;
 }
