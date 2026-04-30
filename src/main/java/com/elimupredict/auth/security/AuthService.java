@@ -65,7 +65,7 @@ public class AuthService {
                 .username(request.getUsername())
                 .isActive(true)
                 .createdBy(registerBy)
-                .password(passwordEncoder.encode(request.getFullName()))
+                .fullName(request.getFullName())
                 .role(request.getRole())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();
