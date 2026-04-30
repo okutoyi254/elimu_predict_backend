@@ -2,6 +2,7 @@ package com.elimupredict.reports;
 
 import com.elimupredict.ai.AIAnalysisRepository;
 import com.elimupredict.ai.AiAnalysis;
+import com.elimupredict.ai.AiAnalysisService;
 import com.elimupredict.ai.GeminiService;
 import com.elimupredict.common.enums.ExamType;
 import com.elimupredict.common.enums.Term;
@@ -33,6 +34,7 @@ public class ParentReportService {
     private final SubjectService subjectService;
     private final UserRepository userRepository;
     private final GeminiService geminiService;
+    private final AiAnalysisService analysisService;
 
 //    landing page
     public List<ParentStudentProfileDTO> getChildrenProfiles(
@@ -108,10 +110,19 @@ public class ParentReportService {
                 .findByAdmissionNumberAndTermAndAcademicYear(
                         admissionNumber, term, academicYear);
 
+//Auto-run analysis if none exists
         if (analyses.isEmpty()) {
-            throw new RuntimeException(
-                    "No analysis data found. " +
-                            "Please ask the teacher to run analysis first.");
+            log.info("[PARENT PROFILE] No analysis found for {} — auto-triggering...", admissionNumber);
+            try {
+                analysisService.analyzeStudent(admissionNumber, term, academicYear);
+                analyses = analysisRepository
+                        .findByAdmissionNumberAndTermAndAcademicYear(
+                                admissionNumber, term, academicYear);
+                log.info("[PARENT PROFILE] Auto-analysis complete for {}", admissionNumber);
+            } catch (Exception e) {
+                log.warn("[PARENT PROFILE] Auto-analysis failed for {} — {}",
+                        admissionNumber, e.getMessage());
+            }
         }
 
         List<SuggestionTabDTO.SubjectSuggestionDTO> suggestions =

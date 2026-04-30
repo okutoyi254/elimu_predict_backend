@@ -2,6 +2,7 @@ package com.elimupredict.reports;
 
 import com.elimupredict.ai.AIAnalysisRepository;
 import com.elimupredict.ai.AiAnalysis;
+import com.elimupredict.ai.AiAnalysisService;
 import com.elimupredict.common.enums.ExamType;
 import com.elimupredict.common.enums.Term;
 import com.elimupredict.marks.StudentRecord;
@@ -37,6 +38,7 @@ public class PrincipalReportService {
     private final SubjectService subjectService;
     private final SubjectRepository subjectRepository;
     private final RestTemplate restTemplate;
+    private final AiAnalysisService analysisService;
 
     @Value("${gemini.api.key}")
     private String geminiApiKey;
@@ -212,6 +214,10 @@ public SchoolAnalysisDTO getSchoolAnalysis(
 ) {
 
     List<String> allClasses = studentService.getAvailableClasses();
+
+//    ensure analysis exists for all students before proceeding with report generation
+    autoEnsureAnalysisExists(allClasses, term, academicYear);
+
 
 //        Build prompt summary
     StringBuilder summary = new StringBuilder();
@@ -699,6 +705,51 @@ public SchoolAnalysisDTO getSchoolAnalysis(
         Object val = map.get(key);
         return val != null ? val.toString() : "";
     }
+
+    private void autoEnsureAnalysisExists(
+            List<String> allClasses, Term term, Integer academicYear) {
+
+        log.info("[SCHOOL ANALYSIS] Auto-checking analysis coverage for {} {}",
+                term, academicYear);
+
+        for (String className : allClasses) {
+            List<String> admNos = studentService
+                    .getStudentsByClassName(className)
+                    .stream()
+                    .map(StudentResponse::getAdmissionNumber)
+                    .toList();
+
+            // Check which students are missing analysis
+            List<AiAnalysis> existing = analysisRepository
+                    .findByStudentsAndTerm(admNos, term, academicYear);
+
+
+            Set<String> analyzed = existing.stream()
+                    .map(AiAnalysis::getAdmissionNumber) // adjust to your field name
+                    .collect(java.util.stream.Collectors.toSet());
+
+            List<String> missing = admNos.stream()
+                    .filter(admNo -> !analyzed.contains(admNo))
+                    .toList();
+
+            if (!missing.isEmpty()) {
+                log.info("[SCHOOL ANALYSIS] Running analysis for {} unanalyzed " +
+                        "students in class {}", missing.size(), className);
+                for (String admNo : missing) {
+                    try {
+                        analysisService.analyzeStudent(
+                                admNo, term, academicYear);
+                    } catch (Exception e) {
+                        log.warn("[SCHOOL ANALYSIS] Could not analyze student {}: {}",
+                                admNo, e.getMessage());
+                    }
+                }
+            }
+        }
+
+        log.info("[SCHOOL ANALYSIS] Coverage check complete");
+    }
+
 }
 
 
