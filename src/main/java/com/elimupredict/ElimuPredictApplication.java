@@ -18,7 +18,7 @@ public class ElimuPredictApplication {
 		return args -> {
 			Thread.ofVirtual().start(() ->
 					LoggerFactory.getLogger(ElimuPredictApplication.class)
-							.info("Virtual threads active: {}",
+							.info(" JVM Virtual threads active: {}",
 									Thread.currentThread().isVirtual())
 			);
 		};
